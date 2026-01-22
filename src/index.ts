@@ -1,9 +1,12 @@
 import { Elysia, t } from "elysia";
-import type { Context } from "elysia";
 import index from "./index.html";
 import chalk from "chalk";
 import { nanoid } from "nanoid";
-import { auth } from "./lib/auth.ts";
+import { jwt } from "@elysiajs/jwt";
+import { db } from "./lib/db";
+import { usersTable } from "./db/schema";
+import { eq } from "drizzle-orm";
+import { env } from "./lib/env";
 
 export type Todo = {
   id: string;
@@ -64,18 +67,77 @@ const todoRouter = new Elysia({ prefix: "/todos" })
     return 204;
   });
 
-const betterAuthView = (context: Context) => {
-  const BETTER_AUTH_ACCEPT_METHODS = ["POST", "GET"];
-  // validate request method
-  if (BETTER_AUTH_ACCEPT_METHODS.includes(context.request.method)) {
-    return auth.handler(context.request);
-  } else {
-    context.error(405);
-  }
-};
-const app = new Elysia().all("/api/auth/*", betterAuthView);
+const authRouter = new Elysia()
+  .use(
+    jwt({
+      name: "jwt",
+      secret: env.JWT_SECRET,
+    }),
+  )
+  .post("/login", async ({ body, jwt, cookie: { auth }, set }) => {
+    const { username, password } = body as {
+      username: string;
+      password: string;
+    };
 
-const elysia = new Elysia().get("/", index).use(todoRouter).listen(3000);
+    const user = (
+      await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.username, username))
+    )[0];
+
+    // TODO: use bcrypt.compare
+    if (!user || user.password !== password) {
+      set.status = 401;
+      return {
+        success: false,
+        message: "Invalid credentials",
+      };
+    }
+
+    const token = await jwt.sign({
+      id: user.id,
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+    });
+
+    auth?.set({
+      httpOnly: true,
+      maxAge: 60 * 60 * 24,
+      path: "/",
+    });
+
+    return {
+      success: true,
+      token,
+      user: { name: user.username },
+    };
+  })
+  .get("/sign/:name", async ({ jwt, params: { name }, cookie: { auth } }) => {
+    const value = await jwt.sign({ name });
+
+    auth?.set({
+      value,
+      httpOnly: true,
+      maxAge: 7 * 86400,
+      path: "/profile",
+    });
+
+    return `Sign in as ${value}`;
+  })
+  .get("/profile", async ({ jwt, status, cookie: { auth } }) => {
+    const profile = await jwt.verify(auth.value);
+
+    if (!profile) return status(401, "Unauthorized");
+
+    return `Hello ${profile.name}`;
+  });
+
+const elysia = new Elysia()
+  .get("/", index)
+  .use(todoRouter)
+  .use(authRouter)
+  .listen(3000);
 
 export type Api = typeof elysia;
 

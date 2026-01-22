@@ -5,8 +5,7 @@ import "dotenv/config";
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string(),
-    BETTER_AUTH_SECRET: z.string(),
-    BETTER_AUTH_URL: z.string(),
+    JWT_SECRET: z.string(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
