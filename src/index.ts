@@ -1,7 +1,9 @@
 import { Elysia, t } from "elysia";
+import type { Context } from "elysia";
 import index from "./index.html";
 import chalk from "chalk";
 import { nanoid } from "nanoid";
+import { auth } from "./lib/auth.ts";
 
 export type Todo = {
   id: string;
@@ -61,6 +63,17 @@ const todoRouter = new Elysia({ prefix: "/todos" })
     todos.splice(index, 1);
     return 204;
   });
+
+const betterAuthView = (context: Context) => {
+  const BETTER_AUTH_ACCEPT_METHODS = ["POST", "GET"];
+  // validate request method
+  if (BETTER_AUTH_ACCEPT_METHODS.includes(context.request.method)) {
+    return auth.handler(context.request);
+  } else {
+    context.error(405);
+  }
+};
+const app = new Elysia().all("/api/auth/*", betterAuthView);
 
 const elysia = new Elysia().get("/", index).use(todoRouter).listen(3000);
 
