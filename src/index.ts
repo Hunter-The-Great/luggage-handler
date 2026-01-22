@@ -7,6 +7,7 @@ import { db } from "./lib/db";
 import { usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "./lib/env";
+import { cookie } from "@elysiajs/cookie";
 
 export type Todo = {
   id: string;
@@ -74,7 +75,8 @@ const authRouter = new Elysia()
       secret: env.JWT_SECRET,
     }),
   )
-  .post("/login", async ({ body, jwt, cookie: { auth }, set }) => {
+  .use(cookie())
+  .post("/login", async ({ body, status, jwt, cookie: { auth } }) => {
     const { username, password } = body as {
       username: string;
       password: string;
@@ -89,11 +91,7 @@ const authRouter = new Elysia()
 
     // TODO: use bcrypt.compare
     if (!user || user.password !== password) {
-      set.status = 401;
-      return {
-        success: false,
-        message: "Invalid credentials",
-      };
+      return status(401, "Unauthorized");
     }
 
     const token = await jwt.sign({
@@ -102,28 +100,16 @@ const authRouter = new Elysia()
     });
 
     auth?.set({
+      value: token,
       httpOnly: true,
-      maxAge: 60 * 60 * 24,
+      maxAge: 604800,
       path: "/",
     });
 
     return {
       success: true,
-      token,
-      user: { name: user.username },
+      user: { name: user.username, role: user.role },
     };
-  })
-  .get("/sign/:name", async ({ jwt, params: { name }, cookie: { auth } }) => {
-    const value = await jwt.sign({ name });
-
-    auth?.set({
-      value,
-      httpOnly: true,
-      maxAge: 7 * 86400,
-      path: "/profile",
-    });
-
-    return `Sign in as ${value}`;
   })
   .get("/profile", async ({ jwt, status, cookie: { auth } }) => {
     const profile = await jwt.verify(auth.value);
