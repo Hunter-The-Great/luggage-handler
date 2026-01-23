@@ -7,6 +7,7 @@ import { db } from "./lib/db";
 import { usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "./lib/env";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 
 export type Todo = {
   id: string;
@@ -151,3 +152,7 @@ console.log(
   chalk.green("Server running at"),
   chalk.yellow.underline(elysia.server?.url),
 );
+
+await migrate(db, {
+  migrationsFolder: "./drizzle",
+});

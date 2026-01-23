@@ -8,7 +8,7 @@
     "start": "NODE_ENV=production bun src/index.ts",
     "typecheck": "bun tsc --noEmit",
     "build": "bun run build.ts",
-    "db": "npx drizzle-kit push"
+    "db": "npx drizzle-kit generate"
   },
   "dependencies": {
     "@elysiajs/cookie": "^0.8.0",
