@@ -7,7 +7,6 @@ import { db } from "./lib/db";
 import { usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "./lib/env";
-import { cookie } from "@elysiajs/cookie";
 
 export type Todo = {
   id: string;
@@ -73,50 +72,66 @@ const authRouter = new Elysia()
     jwt({
       name: "jwt",
       secret: env.JWT_SECRET,
+      schema: t.Object({
+        id: t.Number(),
+        username: t.String(),
+        role: t.UnionEnum(["admin", "airline", "gate", "ground"]),
+      }),
     }),
   )
-  .use(cookie())
-  .post("/login", async ({ body, status, jwt, cookie: { auth } }) => {
-    const { username, password } = body as {
-      username: string;
-      password: string;
-    };
+  .post(
+    "/login",
+    async ({ body, status, jwt, cookie: { auth } }) => {
+      const { username, password } = body;
+      const user = (
+        await db
+          .select()
+          .from(usersTable)
+          .where(eq(usersTable.username, username))
+      )[0];
 
-    const user = (
-      await db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.username, username))
-    )[0];
+      // TODO: use bcrypt.compare
+      if (!user || user.password !== password) {
+        return status(401, "Unauthorized");
+      }
 
-    // TODO: use bcrypt.compare
-    if (!user || user.password !== password) {
-      return status(401, "Unauthorized");
-    }
+      const token = await jwt.sign({
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      });
 
-    const token = await jwt.sign({
-      id: user.id,
-      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-    });
+      auth?.set({
+        value: token,
+        httpOnly: true,
+        maxAge: 604800,
+        path: "/",
+      });
 
-    auth?.set({
-      value: token,
-      httpOnly: true,
-      maxAge: 604800,
-      path: "/",
-    });
+      return {
+        success: true,
+        user: { username: user.username, id: user.id, role: user.role },
+      };
+    },
+    {
+      body: t.Object({
+        username: t.String(),
+        password: t.String(),
+      }),
+    },
+  )
+  .derive(async ({ jwt, cookie }) => {
+    const token = cookie.auth;
+    if (!token) return { user: null };
 
-    return {
-      success: true,
-      user: { name: user.username, role: user.role },
-    };
+    if (typeof token.value !== "string") return { user: null };
+    const payload = await jwt.verify(token.value);
+    if (!payload) return { user: null };
+
+    return { user: payload };
   })
-  .get("/profile", async ({ jwt, status, cookie: { auth } }) => {
-    const profile = await jwt.verify(auth.value);
-
-    if (!profile) return status(401, "Unauthorized");
-
-    return `Hello ${profile.name}`;
+  .get("/profile", async ({ user }) => {
+    return user;
   });
 
 const elysia = new Elysia()

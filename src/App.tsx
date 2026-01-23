@@ -11,6 +11,8 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { client } from "./client";
+import { roles } from "./db/schema";
+import { AuthProvider, RoleGuard, useAuth } from "./checkAuth";
 
 const ThemeContext = createContext<null | string>(null);
 
@@ -20,12 +22,17 @@ export function App() {
   const [mode, setMode] = useState("dark");
 
   return (
-    <ThemeContext.Provider value={mode}>
+    <AuthProvider>
       <QueryClientProvider client={queryClient}>
+        <LoginForm />
+        <br />
+        <RoleGuard allowedRoles={["admin"]}>
+          <AdminComponent />
+        </RoleGuard>
         <Todos />
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
-    </ThemeContext.Provider>
+    </AuthProvider>
   );
 }
 
@@ -61,6 +68,38 @@ const HelloWorld = (props: { name: string }) => {
   return <div>Current theme: {mode}</div>;
 };
 
+const LoginForm = () => {
+  const { login } = useAuth();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<null | string>(null);
+
+  const handleSubmit = async (username: string, password: string) => {
+    const result = await login(username, password);
+
+    setError(result.message || null);
+  };
+
+  return (
+    <>
+      <label>Username</label>
+      <input
+        type="text"
+        className="border"
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <label>Password</label>
+      <input
+        type="password"
+        className="border"
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <button onClick={() => handleSubmit(username, password)}>Login</button>
+      {error ? <div className="text-red-600">{error}</div> : null}
+    </>
+  );
+};
+
 const Todo = (props: { todo: Todo; toggleTodo: (text: string) => void }) => {
   const queryClient = useQueryClient();
 
@@ -75,6 +114,15 @@ const Todo = (props: { todo: Todo; toggleTodo: (text: string) => void }) => {
       ></input>
       {props.todo.text}
       <button className="pl-5">Delete</button>
+    </div>
+  );
+};
+
+const AdminComponent = () => {
+  return (
+    <div className="p-6 bg-blue-100 rounded-lg border-2 border-blue-500">
+      <h2 className="text-2xl font-bold text-blue-800 mb-2">Admin Component</h2>
+      <p className="text-blue-700">This is exclusive content for admins.</p>
     </div>
   );
 };
