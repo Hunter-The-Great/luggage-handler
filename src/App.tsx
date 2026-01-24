@@ -134,10 +134,7 @@ const AddUserForm = () => {
       airline,
     });
     if (result.error) {
-      setError("Failed to register user");
-      setLoading(null);
-    } else if (result.data.success === false) {
-      setError(result.data.message || "Failed to register user");
+      setError(result.error.value.toString());
       setLoading(null);
     } else {
       setLoading("Success");

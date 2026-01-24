@@ -165,40 +165,28 @@ const adminRouter = new Elysia({ prefix: "/admin" })
   })
   .post(
     "/register",
-    async ({ body }) => {
+    async ({ status, body }) => {
       const emailRegex = /^\w+@\w+\.\w+$/;
       const phonesRegex = /^[1-9]\d{9}$/;
       switch (body.role) {
         case "gate":
         case "airline":
-          if (!body.airline)
-            return { success: false, message: "Airline is required" };
+          if (!body.airline) return status(400, "Airline is required");
         case "ground":
-          if (!body.firstName)
-            return { success: false, message: "First name is required" };
+          if (!body.firstName) return status(400, "First name is required");
           if (body.firstName.length < 2)
-            return {
-              success: false,
-              message: "First name must be at least 2 characters",
-            };
-          if (!body.lastName)
-            return { success: false, message: "Last name is required" };
+            return status(400, "First name must be at least 2 characters");
+          if (!body.lastName) return status(400, "Last name is required");
           if (body.lastName.length < 2)
-            return {
-              success: false,
-              message: "Last name must be at least 2 characters",
-            };
-          if (!body.email)
-            return { success: false, message: "Email is required" };
-          if (!emailRegex.test(body.email))
-            return { success: false, message: "Invalid email" };
-          if (!body.phone)
-            return { success: false, message: "Phone is required" };
+            return status(400, "Last name must be at least 2 characters");
+          if (!body.email) return status(400, "Email is required");
+          if (!emailRegex.test(body.email)) return status(400, "Invalid email");
+          if (!body.phone) return status(400, "Phone is required");
           if (!phonesRegex.test(body.phone))
-            return { success: false, message: "Invalid phone number" };
+            return status(400, "Invalid phone number");
           break;
         default:
-          throw new Error("Invalid role");
+          return status(400, "Invalid role");
       }
       try {
         let username = body.lastName;

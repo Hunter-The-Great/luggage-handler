@@ -7,16 +7,35 @@
 
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router";
+import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router";
 import { AuthProvider, useAuth } from "./checkAuth";
 import { LoginForm } from "./login";
+import type { RoleType } from "./db/schema";
+import type { ReactNode } from "react";
 
 const Redirect = () => {
-  const user = useAuth();
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-  return <Navigate to="/homepage" />;
+  const { user } = useAuth();
+
+  return RoleMap[user.role as RoleType];
+};
+
+const RoleMap: Record<RoleType, ReactNode> = {
+  admin: <App />,
+  airline: <div>airline</div>,
+  gate: <div>gate</div>,
+  ground: <div>ground</div>,
+};
+
+const LoginCheck = () => {
+  const { user } = useAuth();
+
+  return user ? <Outlet /> : <Navigate to="/login" />;
+};
+
+const RoleCheck = (props: { role: RoleType }) => {
+  const { user } = useAuth();
+
+  return user.role === props.role ? <Outlet /> : <Navigate to="/" />;
 };
 
 function start() {
@@ -25,10 +44,10 @@ function start() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route index element={<Redirect />} />
-          <Route path="/dog" element={<div>Dog route</div>}></Route>
+          <Route element={<LoginCheck />}>
+            <Route path="/" element={<Redirect />} />
+          </Route>
           <Route path="/login" element={<LoginForm />} />
-          <Route path="/homepage" element={<App />} />
           <Route
             path="*"
             element={<div> Not Found or you do not have permission.</div>}

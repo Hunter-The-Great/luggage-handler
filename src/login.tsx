@@ -1,18 +1,24 @@
 import { useState } from "react";
 import { useAuth } from "./checkAuth";
+import { useNavigate } from "react-router";
 
 export const LoginForm = () => {
   const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<null | string>(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (username: string, password: string) => {
     const result = await login(username, password);
-    setUsername("");
-    setPassword("");
 
     setError(result.message || null);
+
+    if (result.success) {
+      setUsername("");
+      setPassword("");
+      navigate("/");
+    }
   };
 
   return (
