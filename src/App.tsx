@@ -23,20 +23,10 @@ export function App() {
   const [mode, setMode] = useState("dark");
 
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <RoleGuard allowedRoles={["admin", "ground", "airline", "gate"]}>
-          <LogoutButton />
-        </RoleGuard>
-        <br />
-        <RoleGuard allowedRoles={["admin"]}>
-          <AdminComponent />
-          <AddUserForm />
-        </RoleGuard>
-        <Todos />
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </AuthProvider>
+    <div className="flex flex-col justify-center items-center p-6">
+      <AddUserForm />
+      <ReactQueryDevtools initialIsOpen={false} />
+    </div>
   );
 }
 
@@ -70,19 +60,6 @@ const HelloWorld = (props: { name: string }) => {
     throw new Error("ThemeContext is not defined");
   }
   return <div>Current theme: {mode}</div>;
-};
-
-const LogoutButton = () => {
-  const { logout } = useAuth();
-
-  const handleLogout = async () => {
-    await logout();
-  };
-  return (
-    <>
-      <button onClick={() => handleLogout()}>Logout</button>
-    </>
-  );
 };
 
 const Todo = (props: { todo: Todo; toggleTodo: (text: string) => void }) => {
@@ -123,8 +100,8 @@ const AddUserForm = () => {
   const [loading, setLoading] = useState<null | string>(null);
 
   const handleSubmit = async () => {
-    setLoading("Processing...");
     setError(null);
+    setLoading("Processing...");
     const result = await client.api.admin.register.post({
       role: role || null,
       firstName,
@@ -148,7 +125,7 @@ const AddUserForm = () => {
   };
 
   return (
-    <div className="flex flex-col w-sm">
+    <div className="flex flex-col">
       <label>Role</label>
       <select onChange={(e) => setRole(e.target.value as RoleType)}>
         <option value="">Select a role</option>
@@ -157,6 +134,7 @@ const AddUserForm = () => {
           return <option value={role}>{role}</option>;
         })}
       </select>
+      <div className="flex h-2" />
       <label>First Name</label>
       <input
         type="text"
@@ -164,6 +142,7 @@ const AddUserForm = () => {
         value={firstName}
         onChange={(e) => setFirstName(e.target.value)}
       ></input>
+      <div className="flex h-2" />
       <label>Last Name</label>
       <input
         type="text"
@@ -171,6 +150,7 @@ const AddUserForm = () => {
         value={lastName}
         onChange={(e) => setLastName(e.target.value)}
       ></input>
+      <div className="flex h-2" />
       <label>Email</label>
       <input
         type="text"
@@ -178,6 +158,7 @@ const AddUserForm = () => {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       ></input>
+      <div className="flex h-2" />
       <label>Phone</label>
       <input
         type="text"
@@ -185,6 +166,7 @@ const AddUserForm = () => {
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
       ></input>
+      <div className="flex h-2" />
       <label>Airline</label>
       <input
         type="text"
@@ -192,9 +174,15 @@ const AddUserForm = () => {
         value={airline}
         onChange={(e) => setAirline(e.target.value)}
       ></input>
-      <button onClick={() => handleSubmit()}>Add User</button>
-      {loading ? <div>{loading}</div> : null}
-      {error ? <div className="text-red-600">{error}</div> : null}
+      <div className="flex h-2" />
+      <button
+        className="bg-gray-800 text-white px-4 py-2 rounded-lg"
+        onClick={() => handleSubmit()}
+      >
+        Add User
+      </button>
+      {loading ? <div className="text-center">{loading}</div> : null}
+      {error ? <div className="text-red-600 text-center">{error}</div> : null}
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import { env } from "./lib/env";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { generatePassword } from "./lib/password";
+import { ChangePassword } from "./changePassword";
 
 export type Todo = {
   id: string;
@@ -78,6 +79,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
         id: t.Number(),
         username: t.String(),
         role: t.UnionEnum(["admin", "airline", "gate", "ground"]),
+        newAccount: t.Boolean(),
       }),
     }),
   )
@@ -97,6 +99,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
           id: user.id,
           username: user.username,
           role: user.role,
+          newAccount: user.newAccount,
         });
 
         auth?.set({
@@ -108,7 +111,12 @@ const authRouter = new Elysia({ prefix: "/auth" })
 
         return {
           success: true,
-          user: { username: user.username, id: user.id, role: user.role },
+          user: {
+            username: user.username,
+            id: user.id,
+            role: user.role,
+            newAccount: user.newAccount,
+          },
         };
       } else return status(401, "Unauthorized");
     },
@@ -133,6 +141,32 @@ const authRouter = new Elysia({ prefix: "/auth" })
 
     return { user: payload };
   })
+  .post(
+    "/change-password",
+    async ({ user, body, status, jwt, cookie: { auth } }) => {
+      if (!auth) return status(401);
+
+      if (typeof auth.value !== "string") return status(401);
+      const payload = await jwt.verify(auth.value);
+      if (!payload) return status(401);
+
+      const { oldPassword, newPassword, confirmation } = body;
+
+      try {
+        await ChangePassword(user, oldPassword, newPassword, confirmation);
+        return { success: true };
+      } catch (error: any) {
+        return status(400, error.message);
+      }
+    },
+    {
+      body: t.Object({
+        oldPassword: t.String(),
+        newPassword: t.String(),
+        confirmation: t.String(),
+      }),
+    },
+  )
   .get("/profile", async ({ user }) => {
     return user;
   });

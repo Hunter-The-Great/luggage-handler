@@ -12,9 +12,16 @@ import { AuthProvider, useAuth } from "./checkAuth";
 import { LoginForm } from "./login";
 import type { RoleType } from "./db/schema";
 import type { ReactNode } from "react";
+import { PasswordForm } from "./passwordForm";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TopBar } from "./topBar";
 
 const Redirect = () => {
   const { user } = useAuth();
+
+  if (user.newAccount) {
+    return <Navigate to="/change-password" />;
+  }
 
   return RoleMap[user.role as RoleType];
 };
@@ -32,28 +39,36 @@ const LoginCheck = () => {
   return user ? <Outlet /> : <Navigate to="/login" />;
 };
 
-const RoleCheck = (props: { role: RoleType }) => {
-  const { user } = useAuth();
-
-  return user.role === props.role ? <Outlet /> : <Navigate to="/" />;
-};
+const queryClient = new QueryClient();
 
 function start() {
   const root = createRoot(document.getElementById("root")!);
   root.render(
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<LoginCheck />}>
-            <Route path="/" element={<Redirect />} />
-          </Route>
-          <Route path="/login" element={<LoginForm />} />
-          <Route
-            path="*"
-            element={<div> Not Found or you do not have permission.</div>}
-          />
-        </Routes>
-      </BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              element={
+                <>
+                  <TopBar />
+                  <Outlet />
+                </>
+              }
+            >
+              <Route element={<LoginCheck />}>
+                <Route path="/" element={<Redirect />} />
+                <Route path="/change-password" element={<PasswordForm />} />
+              </Route>
+              <Route path="/login" element={<LoginForm />} />
+              <Route
+                path="*"
+                element={<div> Not Found or you do not have permission.</div>}
+              />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </QueryClientProvider>
     </AuthProvider>,
   );
 }

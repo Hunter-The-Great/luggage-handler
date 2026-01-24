@@ -7,6 +7,7 @@ import {
 } from "react";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import { client } from "./client";
+import type { RoleType } from "./db/schema";
 
 type Auth = {
   user: any;
@@ -22,7 +23,8 @@ const AuthContext = createContext<null | Auth>(null);
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useLocalStorage<null | {
     username: string;
-    role: "admin" | "airline" | "gate" | "ground";
+    role: RoleType;
+    newAccount: boolean;
   }>("auth", null);
 
   useEffect(() => {
