@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "./checkAuth";
 import { client } from "./client";
+import { Input } from "./components/ui/input";
 
 export const PasswordForm = () => {
   const [status, setStatus] = useState<null | string>(null);
@@ -33,7 +34,7 @@ export const PasswordForm = () => {
   return (
     <div className="flex flex-col justify-center items-center p-6">
       <label>Old Password</label>
-      <input
+      <Input
         className="border"
         type="password"
         value={oldPassword}
@@ -41,7 +42,7 @@ export const PasswordForm = () => {
       />
       <div className="flex h-2" />
       <label>New Password</label>
-      <input
+      <Input
         className="border"
         type="password"
         value={newPassword}
@@ -49,7 +50,7 @@ export const PasswordForm = () => {
       />
       <div className="flex h-2" />
       <label>Confirm New Password</label>
-      <input
+      <Input
         className="border"
         type="password"
         value={confirmation}

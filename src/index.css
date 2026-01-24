@@ -16,3 +16,7 @@
     animation: none !important;
   }
 }
+
+.debug {
+outline: 1px solid red;
+}

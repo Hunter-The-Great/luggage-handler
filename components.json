@@ -7,8 +7,8 @@
     "config": "",
     "css": "src/index.css",
     "baseColor": "gray",
-    "cssVariables": true,
-    "prefix": "",
+    "cssVariables": false,
+    "prefix": ""
   },
   "aliases": {
     "components": "@/components",

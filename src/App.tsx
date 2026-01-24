@@ -14,6 +14,8 @@ import { client } from "./client";
 import type { RoleType } from "./db/schema";
 import { roles } from "./db/schema";
 import { AuthProvider, RoleGuard, useAuth } from "./checkAuth";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
 
 const ThemeContext = createContext<null | string>(null);
 
@@ -127,7 +129,10 @@ const AddUserForm = () => {
   return (
     <div className="flex flex-col">
       <label>Role</label>
-      <select onChange={(e) => setRole(e.target.value as RoleType)}>
+      <select
+        className="p-1 border rounded-lg"
+        onChange={(e) => setRole(e.target.value as RoleType)}
+      >
         <option value="">Select a role</option>
         {roles.enumValues.map((role) => {
           if (role === "admin") return;
@@ -136,51 +141,48 @@ const AddUserForm = () => {
       </select>
       <div className="flex h-2" />
       <label>First Name</label>
-      <input
+      <Input
         type="text"
-        className="border"
+        className="border rounded-lg"
         value={firstName}
         onChange={(e) => setFirstName(e.target.value)}
-      ></input>
+      ></Input>
       <div className="flex h-2" />
       <label>Last Name</label>
-      <input
+      <Input
         type="text"
-        className="border"
+        className="border rounded-lg"
         value={lastName}
         onChange={(e) => setLastName(e.target.value)}
-      ></input>
+      ></Input>
       <div className="flex h-2" />
       <label>Email</label>
-      <input
+      <Input
         type="text"
-        className="border"
+        className="border rounded-lg"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-      ></input>
+      ></Input>
       <div className="flex h-2" />
       <label>Phone</label>
-      <input
+      <Input
         type="text"
-        className="border"
+        className="border rounded-lg"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-      ></input>
+      ></Input>
       <div className="flex h-2" />
       <label>Airline</label>
-      <input
+      <Input
         type="text"
-        className="border"
+        className="border rounded-lg"
         value={airline}
         onChange={(e) => setAirline(e.target.value)}
-      ></input>
+      ></Input>
       <div className="flex h-2" />
-      <button
-        className="bg-gray-800 text-white px-4 py-2 rounded-lg"
-        onClick={() => handleSubmit()}
-      >
+      <Button className="w-1/2 self-center" onClick={() => handleSubmit()}>
         Add User
-      </button>
+      </Button>
       {loading ? <div className="text-center">{loading}</div> : null}
       {error ? <div className="text-red-600 text-center">{error}</div> : null}
     </div>
