@@ -16,6 +16,7 @@ import { roles } from "./db/schema";
 import { AuthProvider, RoleGuard, useAuth } from "./checkAuth";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
+import { Separator } from "./components/ui/separator";
 
 const ThemeContext = createContext<null | string>(null);
 
@@ -127,8 +128,10 @@ const AddUserForm = () => {
   };
 
   return (
-    <div className="flex flex-col">
-      <label>Role</label>
+    <div className="flex bg-neutral-700/40 border w-1/2 rounded-lg border-neutral-600 px-4 shadow p-3  flex-col">
+      <h1 className="pb-1 font-semibold text-lg">Create a User</h1>
+      <Separator />
+      <label className="opacity-80 pt-4 text-sm">Role</label>
       <select
         className="p-1 border rounded-lg"
         onChange={(e) => setRole(e.target.value as RoleType)}
@@ -140,31 +143,37 @@ const AddUserForm = () => {
         })}
       </select>
       <div className="flex h-2" />
-      <label>First Name</label>
-      <Input
-        type="text"
-        className="border rounded-lg"
-        value={firstName}
-        onChange={(e) => setFirstName(e.target.value)}
-      ></Input>
+      <div className="flex gap-4">
+        <div>
+          <label className="opacity-80 text-sm">First Name</label>
+          <Input
+            type="text"
+            className="border rounded-lg"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          ></Input>
+        </div>
+        <div>
+          <label className="opacity-80 text-sm">Last Name</label>
+          <Input
+            type="text"
+            className="border rounded-lg"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          ></Input>
+        </div>
+      </div>
       <div className="flex h-2" />
-      <label>Last Name</label>
+      <label className="opacity-80 text-sm">Email</label>
       <Input
         type="text"
         className="border rounded-lg"
-        value={lastName}
-        onChange={(e) => setLastName(e.target.value)}
-      ></Input>
-      <div className="flex h-2" />
-      <label>Email</label>
-      <Input
-        type="text"
-        className="border rounded-lg"
+        placeholder="example@gmail.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       ></Input>
       <div className="flex h-2" />
-      <label>Phone</label>
+      <label className="opacity-80 text-sm">Phone</label>
       <Input
         type="text"
         className="border rounded-lg"
@@ -172,19 +181,26 @@ const AddUserForm = () => {
         onChange={(e) => setPhone(e.target.value)}
       ></Input>
       <div className="flex h-2" />
-      <label>Airline</label>
+      <label className="opacity-80 text-sm">Airline</label>
       <Input
         type="text"
         className="border rounded-lg"
         value={airline}
         onChange={(e) => setAirline(e.target.value)}
       ></Input>
-      <div className="flex h-2" />
-      <Button className="w-1/2 self-center" onClick={() => handleSubmit()}>
-        Add User
-      </Button>
-      {loading ? <div className="text-center">{loading}</div> : null}
-      {error ? <div className="text-red-600 text-center">{error}</div> : null}
+      <div className="pt-4 flex justify-between items-center">
+        {loading ? <div className="text-center text-lg">{loading}</div> : null}
+        {error ? (
+          <div className="text-red-400 text-lg text-center">{error}</div>
+        ) : null}
+        <Button
+          variant="primary"
+          className="self-end"
+          onClick={() => handleSubmit()}
+        >
+          Add User
+        </Button>
+      </div>
     </div>
   );
 };

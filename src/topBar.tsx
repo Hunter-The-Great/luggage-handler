@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useAuth } from "./checkAuth";
 
 export const TopBar = () => {
@@ -7,12 +7,12 @@ export const TopBar = () => {
   const ChangePasswordButton = () => {
     return (
       <>
-        <button
-          className="px-2 py-1 rounded-lg  bg-blue-600 hover:bg-blue-700 transition duration-200"
-          onClick={() => navigate("/change-password")}
+        <Link
+          className="px-2 py-1 text-sm underline decoration-neutral-300 cursor-pointer underline-n"
+          to="/change-password"
         >
           Change Password
-        </button>
+        </Link>
       </>
     );
   };
@@ -26,7 +26,7 @@ export const TopBar = () => {
     return (
       <>
         <button
-          className="px-2 py-1 rounded-lg  bg-blue-600 hover:bg-blue-700 transition duration-200"
+          className="px-2 py-1 rounded-lg text-sm  bg-neutral-700/80 hover:bg-neutral-700 transition duration-200"
           onClick={() => handleLogout()}
         >
           Logout
@@ -42,7 +42,7 @@ export const TopBar = () => {
     return (
       <>
         <button
-          className="px-2 py-1 rounded-lg  bg-blue-600 hover:bg-blue-700 transition duration-200"
+          className="px-2 py-1 rounded-lg  bg-neutral-700/80 hover:bg-neutral-700 transition duration-200"
           onClick={() => handleLogin()}
         >
           Login
@@ -54,7 +54,7 @@ export const TopBar = () => {
   const HomeButton = () => {
     return (
       <>
-        <button className="p-1 bg-blue-600 rounded-xl hover:bg-blue-700 transition duration-200">
+        <button className="p-1 bg-blue-700/80 rounded-xl hover:bg-neutral-700 transition duration-200">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -88,7 +88,7 @@ export const TopBar = () => {
   };
 
   return (
-    <nav className="flex flex-row p-3 justify-between items-center bg-slate-900">
+    <nav className="flex flex-row p-3 justify-between shadow border-b-neutral-700 border-b items-center bg-neutral-900">
       <div className="flex-1">
         <HomeButton />
       </div>
