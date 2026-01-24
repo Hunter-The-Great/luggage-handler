@@ -149,7 +149,6 @@ const adminRouter = new Elysia({ prefix: "/admin" })
       }),
     }),
   )
-
   .derive(async ({ jwt, cookie }) => {
     const token = cookie.auth;
     if (!token) return { user: null };
@@ -164,7 +163,6 @@ const adminRouter = new Elysia({ prefix: "/admin" })
     if (!user) return status(401);
     if (user.role !== "admin") return status(403);
   })
-  .get("/", () => "admin")
   .post(
     "/register",
     async ({ body }) => {
@@ -266,23 +264,26 @@ const adminRouter = new Elysia({ prefix: "/admin" })
     },
   );
 
-const elysia = new Elysia()
-  .get("/", index)
+const elysia = new Elysia({ prefix: "/api" })
   .use(todoRouter)
   .use(authRouter)
-  .use(adminRouter)
-  .listen(3000);
+  .use(adminRouter);
+
+const server = Bun.serve({
+  port: 3000,
+  routes: {
+    "/api/*": (req) => {
+      return elysia.handle(req);
+    },
+    "/*": index,
+  },
+});
 
 export type Api = typeof elysia;
 
-if (!elysia.server) {
-  console.log(chalk.red("Server failed to start"));
-  process.exit(1);
-}
-
 console.log(
   chalk.green("Server running at"),
-  chalk.yellow.underline(elysia.server?.url),
+  chalk.yellow.underline(server.url),
 );
 
 await migrate(db, {

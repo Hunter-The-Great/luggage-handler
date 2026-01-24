@@ -30,7 +30,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const checkAuth = async () => {
-    const response = await client.auth.profile.get();
+    const response = await client.api.auth.profile.get();
 
     if (response.error) {
       console.log(response.error);
@@ -39,7 +39,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (username: string, password: string) => {
-    const response = await client.auth.login.post({
+    const response = await client.api.auth.login.post({
       username,
       password,
     });
@@ -59,7 +59,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    const response = await client.auth.logout.post();
+    const response = await client.api.auth.logout.post();
     if (response.error) throw new Error("Failed to logout");
 
     setUser(null);

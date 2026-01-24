@@ -14,7 +14,6 @@ import { client } from "./client";
 import type { RoleType } from "./db/schema";
 import { roles } from "./db/schema";
 import { AuthProvider, RoleGuard, useAuth } from "./checkAuth";
-import { LoginForm } from "./login";
 
 const ThemeContext = createContext<null | string>(null);
 
@@ -24,18 +23,20 @@ export function App() {
   const [mode, setMode] = useState("dark");
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <RoleGuard allowedRoles={["admin", "ground", "airline", "gate"]}>
-        <LogoutButton />
-      </RoleGuard>
-      <br />
-      <RoleGuard allowedRoles={["admin"]}>
-        <AdminComponent />
-        <AddUserForm />
-      </RoleGuard>
-      <Todos />
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <RoleGuard allowedRoles={["admin", "ground", "airline", "gate"]}>
+          <LogoutButton />
+        </RoleGuard>
+        <br />
+        <RoleGuard allowedRoles={["admin"]}>
+          <AdminComponent />
+          <AddUserForm />
+        </RoleGuard>
+        <Todos />
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </AuthProvider>
   );
 }
 
@@ -124,7 +125,7 @@ const AddUserForm = () => {
   const handleSubmit = async () => {
     setLoading("Processing...");
     setError(null);
-    const result = await client.admin.register.post({
+    const result = await client.api.admin.register.post({
       role: role || null,
       firstName,
       lastName,

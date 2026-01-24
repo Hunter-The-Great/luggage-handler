@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { nanoid } from "nanoid";
 
 const getTodos = async () => {
-  const loaded = await client.todos.get();
+  const loaded = await client.api.todos.get();
   if (loaded.error) {
     throw new Error("Oops");
   }
@@ -26,7 +26,7 @@ export const useTodos = () => {
 
   const addTodo = useMutation({
     mutationFn: (text: string) =>
-      client.todos.post({
+      client.api.todos.post({
         text: text,
       }),
 

@@ -9,7 +9,6 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router";
-import { LoginForm } from "./login";
 import { AuthProvider, useAuth } from "./checkAuth";
 
 const Redirect = () => {
@@ -26,9 +25,14 @@ function start() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Redirect />} />
-          <Route path="/login " element={<LoginForm />} />
+          <Route index element={<Redirect />} />
+          <Route path="/dog" element={<div>Dog route</div>}></Route>
+          <Route path="/login" element={<div>Fucking hell man</div>} />
           <Route path="/homepage" element={<App />} />
+          <Route
+            path="*"
+            element={<div> Not Found or you do not have permission.</div>}
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>,
