@@ -69,7 +69,7 @@ const todoRouter = new Elysia({ prefix: "/todos" })
     return 204;
   });
 
-const authRouter = new Elysia()
+const authRouter = new Elysia({ prefix: "/auth" })
   .use(
     jwt({
       name: "jwt",

@@ -14,6 +14,7 @@ import { client } from "./client";
 import type { RoleType } from "./db/schema";
 import { roles } from "./db/schema";
 import { AuthProvider, RoleGuard, useAuth } from "./checkAuth";
+import { LoginForm } from "./login";
 
 const ThemeContext = createContext<null | string>(null);
 
@@ -23,21 +24,18 @@ export function App() {
   const [mode, setMode] = useState("dark");
 
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <LoginForm />
-        <RoleGuard allowedRoles={["admin", "ground", "airline", "gate"]}>
-          <LogoutButton />
-        </RoleGuard>
-        <br />
-        <RoleGuard allowedRoles={["admin"]}>
-          <AdminComponent />
-          <AddUserForm />
-        </RoleGuard>
-        <Todos />
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <RoleGuard allowedRoles={["admin", "ground", "airline", "gate"]}>
+        <LogoutButton />
+      </RoleGuard>
+      <br />
+      <RoleGuard allowedRoles={["admin"]}>
+        <AdminComponent />
+        <AddUserForm />
+      </RoleGuard>
+      <Todos />
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 
@@ -71,42 +69,6 @@ const HelloWorld = (props: { name: string }) => {
     throw new Error("ThemeContext is not defined");
   }
   return <div>Current theme: {mode}</div>;
-};
-
-const LoginForm = () => {
-  const { login } = useAuth();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<null | string>(null);
-
-  const handleSubmit = async (username: string, password: string) => {
-    const result = await login(username, password);
-    setUsername("");
-    setPassword("");
-
-    setError(result.message || null);
-  };
-
-  return (
-    <>
-      <label>Username</label>
-      <input
-        type="text"
-        className="border"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <label>Password</label>
-      <input
-        type="password"
-        className="border"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button onClick={() => handleSubmit(username, password)}>Login</button>
-      {error ? <div className="text-red-600">{error}</div> : null}
-    </>
-  );
 };
 
 const LogoutButton = () => {
