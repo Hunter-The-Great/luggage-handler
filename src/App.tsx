@@ -11,6 +11,7 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { client } from "./client";
+import type { RoleType } from "./db/schema";
 import { roles } from "./db/schema";
 import { AuthProvider, RoleGuard, useAuth } from "./checkAuth";
 
@@ -25,9 +26,13 @@ export function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <LoginForm />
+        <RoleGuard allowedRoles={["admin", "ground", "airline", "gate"]}>
+          <LogoutButton />
+        </RoleGuard>
         <br />
         <RoleGuard allowedRoles={["admin"]}>
           <AdminComponent />
+          <AddUserForm />
         </RoleGuard>
         <Todos />
         <ReactQueryDevtools initialIsOpen={false} />
@@ -76,6 +81,8 @@ const LoginForm = () => {
 
   const handleSubmit = async (username: string, password: string) => {
     const result = await login(username, password);
+    setUsername("");
+    setPassword("");
 
     setError(result.message || null);
   };
@@ -86,16 +93,31 @@ const LoginForm = () => {
       <input
         type="text"
         className="border"
+        value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
       <label>Password</label>
       <input
         type="password"
         className="border"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
       <button onClick={() => handleSubmit(username, password)}>Login</button>
       {error ? <div className="text-red-600">{error}</div> : null}
+    </>
+  );
+};
+
+const LogoutButton = () => {
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
+  return (
+    <>
+      <button onClick={() => handleLogout()}>Logout</button>
     </>
   );
 };
@@ -123,6 +145,71 @@ const AdminComponent = () => {
     <div className="p-6 bg-blue-100 rounded-lg border-2 border-blue-500">
       <h2 className="text-2xl font-bold text-blue-800 mb-2">Admin Component</h2>
       <p className="text-blue-700">This is exclusive content for admins.</p>
+    </div>
+  );
+};
+
+const AddUserForm = () => {
+  const [username, setUsername] = useState("");
+  const [role, setRole] = useState<null | RoleType>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState<null | string>(null);
+  const [loading, setLoading] = useState<null | string>(null);
+
+  const handleSubmit = async (username: string) => {
+    setLoading("Processing...");
+    const result = await client.admin.register.post({
+      username,
+      role,
+      firstName,
+      lastName,
+      email,
+      phone,
+    });
+    if (result.error) {
+      setError("Failed to register user");
+      setLoading(null);
+    } else {
+      setLoading("Success");
+    }
+  };
+
+  return (
+    <div className="flex flex-col w-sm">
+      <label>Username</label>
+      <input
+        type="text"
+        className="border"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <label>Role</label>
+      <select onChange={(e) => setRole(e.target.value as RoleType)}>
+        <option>Select a role</option>
+        {roles.enumValues.map((role) => (
+          <option value={role}>{role}</option>
+        ))}
+      </select>
+      <label>First Name</label>
+      <input
+        type="text"
+        className="border"
+        value={firstName}
+        onChange={(e) => setFirstName(e.target.value)}
+      ></input>
+      <label>Last Name</label>
+      <input
+        type="text"
+        className="border"
+        value={lastName}
+        onChange={(e) => setLastName(e.target.value)}
+      ></input>
+      <button onClick={() => handleSubmit(username)}>Add User</button>
+      {loading ? <div>{loading}</div> : null}
+      {error ? <div className="text-red-600">{error}</div> : null}
     </div>
   );
 };

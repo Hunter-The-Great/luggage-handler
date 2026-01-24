@@ -6,6 +6,7 @@ export const env = createEnv({
   server: {
     DATABASE_URL: z.string(),
     JWT_SECRET: z.string(),
+    ADMIN_PASSWORD: z.string(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

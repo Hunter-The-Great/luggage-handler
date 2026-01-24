@@ -5,9 +5,10 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { useLocalStorage } from "@uidotdev/usehooks";
 import { client } from "./client";
 
-type auth = {
+type Auth = {
   user: any;
   login: (
     username: string,
@@ -16,13 +17,13 @@ type auth = {
   logout: () => Promise<void>;
 };
 
-const AuthContext = createContext<null | auth>(null);
+const AuthContext = createContext<null | Auth>(null);
 
 const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<null | {
+  const [user, setUser] = useLocalStorage<null | {
     username: string;
     role: "admin" | "airline" | "gate" | "ground";
-  }>(null);
+  }>("auth", null);
 
   useEffect(() => {
     checkAuth();
@@ -91,21 +92,11 @@ const RoleGuard = ({
   const { user } = useAuth();
 
   if (!user) {
-    return (
-      fallback || (
-        <div className="text-red-600">Please log in to view this content</div>
-      )
-    );
+    return fallback;
   }
 
   if (!allowedRoles.includes(user.role)) {
-    return (
-      fallback || (
-        <div className="text-yellow-600">
-          You don't have permission to view this content
-        </div>
-      )
-    );
+    return fallback;
   }
 
   return <>{children}</>;

@@ -91,28 +91,25 @@ const authRouter = new Elysia()
           .where(eq(usersTable.username, username))
       )[0];
 
-      // TODO: use bcrypt.compare
-      if (!user || user.password !== password) {
-        return status(401, "Unauthorized");
-      }
+      if (user && (await Bun.password.verify(password, user.password))) {
+        const token = await jwt.sign({
+          id: user.id,
+          username: user.username,
+          role: user.role,
+        });
 
-      const token = await jwt.sign({
-        id: user.id,
-        username: user.username,
-        role: user.role,
-      });
+        auth?.set({
+          value: token,
+          httpOnly: true,
+          maxAge: 604800,
+          path: "/",
+        });
 
-      auth?.set({
-        value: token,
-        httpOnly: true,
-        maxAge: 604800,
-        path: "/",
-      });
-
-      return {
-        success: true,
-        user: { username: user.username, id: user.id, role: user.role },
-      };
+        return {
+          success: true,
+          user: { username: user.username, id: user.id, role: user.role },
+        };
+      } else return status(401, "Unauthorized");
     },
     {
       body: t.Object({
@@ -121,6 +118,10 @@ const authRouter = new Elysia()
       }),
     },
   )
+  .post("/logout", async ({ cookie: { auth } }) => {
+    auth?.remove();
+    return { success: true };
+  })
   .derive(async ({ jwt, cookie }) => {
     const token = cookie.auth;
     if (!token) return { user: null };
@@ -135,10 +136,63 @@ const authRouter = new Elysia()
     return user;
   });
 
+const adminRouter = new Elysia({ prefix: "/admin" })
+  .use(
+    jwt({
+      name: "jwt",
+      secret: env.JWT_SECRET,
+      schema: t.Object({
+        id: t.Number(),
+        username: t.String(),
+        role: t.UnionEnum(["admin", "airline", "gate", "ground"]),
+      }),
+    }),
+  )
+
+  .derive(async ({ jwt, cookie }) => {
+    const token = cookie.auth;
+    if (!token) return { user: null };
+
+    if (typeof token.value !== "string") return { user: null };
+    const payload = await jwt.verify(token.value);
+    if (!payload) return { user: null };
+
+    return { user: payload };
+  })
+  .onBeforeHandle(({ user, status }) => {
+    if (!user) return status(401);
+    if (user.role !== "admin") return status(403);
+  })
+  .get("/", () => "admin")
+  .post(
+    "/register",
+    async ({ body }) => {
+      await db.insert(usersTable).values({
+        username: body.username,
+        password: await Bun.password.hash("test", {
+          algorithm: "argon2id",
+        }),
+        role: "admin",
+      });
+      return { success: true };
+    },
+    {
+      body: t.Object({
+        username: t.String(),
+        role: t.Nullable(t.UnionEnum(["admin", "airline", "gate", "ground"])),
+        firstName: t.Nullable(t.String()),
+        lastName: t.Nullable(t.String()),
+        email: t.Nullable(t.String()),
+        phone: t.Nullable(t.String()),
+      }),
+    },
+  );
+
 const elysia = new Elysia()
   .get("/", index)
   .use(todoRouter)
   .use(authRouter)
+  .use(adminRouter)
   .listen(3000);
 
 export type Api = typeof elysia;
@@ -156,3 +210,23 @@ console.log(
 await migrate(db, {
   migrationsFolder: "./drizzle",
 });
+
+if (
+  await db
+    .select()
+    .from(usersTable)
+    .then((users) => users.length === 0)
+) {
+  process.stdout.write(
+    chalk.yellow("Admin user not found, creating default admin account... "),
+  );
+  await db.insert(usersTable).values({
+    username: "admin",
+    password: await Bun.password.hash(env.ADMIN_PASSWORD, {
+      algorithm: "argon2id",
+    }),
+    role: "admin",
+    newAccount: false,
+  });
+  console.log(chalk.green("success"));
+}
