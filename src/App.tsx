@@ -150,48 +150,52 @@ const AdminComponent = () => {
 };
 
 const AddUserForm = () => {
-  const [username, setUsername] = useState("");
   const [role, setRole] = useState<null | RoleType>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [airline, setAirline] = useState("");
   const [error, setError] = useState<null | string>(null);
   const [loading, setLoading] = useState<null | string>(null);
 
-  const handleSubmit = async (username: string) => {
+  const handleSubmit = async () => {
     setLoading("Processing...");
+    setError(null);
     const result = await client.admin.register.post({
-      username,
-      role,
+      role: role || null,
       firstName,
       lastName,
       email,
       phone,
+      airline,
     });
     if (result.error) {
       setError("Failed to register user");
       setLoading(null);
+    } else if (result.data.success === false) {
+      setError(result.data.message || "Failed to register user");
+      setLoading(null);
     } else {
       setLoading("Success");
+      setError(null);
+      setEmail("");
+      setPhone("");
+      setAirline("");
+      setFirstName("");
+      setLastName("");
     }
   };
 
   return (
     <div className="flex flex-col w-sm">
-      <label>Username</label>
-      <input
-        type="text"
-        className="border"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
       <label>Role</label>
       <select onChange={(e) => setRole(e.target.value as RoleType)}>
-        <option>Select a role</option>
-        {roles.enumValues.map((role) => (
-          <option value={role}>{role}</option>
-        ))}
+        <option value="">Select a role</option>
+        {roles.enumValues.map((role) => {
+          if (role === "admin") return;
+          return <option value={role}>{role}</option>;
+        })}
       </select>
       <label>First Name</label>
       <input
@@ -207,7 +211,28 @@ const AddUserForm = () => {
         value={lastName}
         onChange={(e) => setLastName(e.target.value)}
       ></input>
-      <button onClick={() => handleSubmit(username)}>Add User</button>
+      <label>Email</label>
+      <input
+        type="text"
+        className="border"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      ></input>
+      <label>Phone</label>
+      <input
+        type="text"
+        className="border"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+      ></input>
+      <label>Airline</label>
+      <input
+        type="text"
+        className="border"
+        value={airline}
+        onChange={(e) => setAirline(e.target.value)}
+      ></input>
+      <button onClick={() => handleSubmit()}>Add User</button>
       {loading ? <div>{loading}</div> : null}
       {error ? <div className="text-red-600">{error}</div> : null}
     </div>

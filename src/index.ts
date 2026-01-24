@@ -8,6 +8,7 @@ import { usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "./lib/env";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { generatePassword } from "./lib/password";
 
 export type Todo = {
   id: string;
@@ -167,23 +168,100 @@ const adminRouter = new Elysia({ prefix: "/admin" })
   .post(
     "/register",
     async ({ body }) => {
-      await db.insert(usersTable).values({
-        username: body.username,
-        password: await Bun.password.hash("test", {
-          algorithm: "argon2id",
-        }),
-        role: "admin",
-      });
-      return { success: true };
+      const emailRegex = /^\w+@\w+\.\w+$/;
+      const phonesRegex = /^[1-9]\d{9}$/;
+      switch (body.role) {
+        case "gate":
+        case "airline":
+          if (!body.airline)
+            return { success: false, message: "Airline is required" };
+        case "ground":
+          if (!body.firstName)
+            return { success: false, message: "First name is required" };
+          if (body.firstName.length < 2)
+            return {
+              success: false,
+              message: "First name must be at least 2 characters",
+            };
+          if (!body.lastName)
+            return { success: false, message: "Last name is required" };
+          if (body.lastName.length < 2)
+            return {
+              success: false,
+              message: "Last name must be at least 2 characters",
+            };
+          if (!body.email)
+            return { success: false, message: "Email is required" };
+          if (!emailRegex.test(body.email))
+            return { success: false, message: "Invalid email" };
+          if (!body.phone)
+            return { success: false, message: "Phone is required" };
+          if (!phonesRegex.test(body.phone))
+            return { success: false, message: "Invalid phone number" };
+          break;
+        default:
+          return { success: false, message: "Invalid role" };
+      }
+      try {
+        let username = body.lastName;
+        const lastNames = await db
+          .select()
+          .from(usersTable)
+          .where(eq(usersTable.lastName, body.lastName));
+
+        if (lastNames.length > 0) {
+          lastNames.sort((a, b) => a.id - b.id);
+          const prevName = lastNames[lastNames.length - 1];
+          if (!prevName || !prevName.lastName)
+            return { success: false, message: "Failed to generate username" };
+          const id =
+            parseInt(prevName.username.substring(prevName.lastName.length)) + 1;
+          if (id < 0 || id > 99) {
+            return {
+              success: false,
+              message: "Failed to generate username",
+            };
+          }
+          if (id < 10) {
+            username += "0" + id;
+          } else {
+            username += id;
+          }
+        } else {
+          username += "00";
+        }
+        const password = generatePassword();
+        // TODO: email the login
+        console.log(password);
+        await db.insert(usersTable).values({
+          username: username,
+          password: await Bun.password.hash(password, {
+            algorithm: "argon2id",
+          }),
+          role: body.role,
+          firstName: body.firstName,
+          lastName: body.lastName,
+          email: body.email,
+          phone: body.phone,
+          airline: body.airline,
+        });
+        return { success: true };
+      } catch (error) {
+        console.log(error);
+        return {
+          success: false,
+          message: "Failed to register",
+        };
+      }
     },
     {
       body: t.Object({
-        username: t.String(),
         role: t.Nullable(t.UnionEnum(["admin", "airline", "gate", "ground"])),
         firstName: t.Nullable(t.String()),
         lastName: t.Nullable(t.String()),
         email: t.Nullable(t.String()),
         phone: t.Nullable(t.String()),
+        airline: t.Nullable(t.String()),
       }),
     },
   );
