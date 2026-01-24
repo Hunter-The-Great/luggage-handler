@@ -198,7 +198,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
             return { success: false, message: "Invalid phone number" };
           break;
         default:
-          return { success: false, message: "Invalid role" };
+          throw new Error("Invalid role");
       }
       try {
         let username = body.lastName;
@@ -272,9 +272,7 @@ const elysia = new Elysia({ prefix: "/api" })
 const server = Bun.serve({
   port: 3000,
   routes: {
-    "/api/*": (req) => {
-      return elysia.handle(req);
-    },
+    "/api/*": elysia.handle,
     "/*": index,
   },
 });

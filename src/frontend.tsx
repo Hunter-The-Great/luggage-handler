@@ -5,11 +5,11 @@
  * It is included in `src/index.html`.
  */
 
-import { createContext, useContext, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router";
 import { AuthProvider, useAuth } from "./checkAuth";
+import { LoginForm } from "./login";
 
 const Redirect = () => {
   const user = useAuth();
@@ -27,7 +27,7 @@ function start() {
         <Routes>
           <Route index element={<Redirect />} />
           <Route path="/dog" element={<div>Dog route</div>}></Route>
-          <Route path="/login" element={<div>Fucking hell man</div>} />
+          <Route path="/login" element={<LoginForm />} />
           <Route path="/homepage" element={<App />} />
           <Route
             path="*"
