@@ -6,9 +6,9 @@
   "tailwind": {
     "config": "",
     "css": "src/index.css",
-    "baseColor": "neutral",
+    "baseColor": "gray",
     "cssVariables": true,
-    "prefix": ""
+    "prefix": "",
   },
   "aliases": {
     "components": "@/components",
