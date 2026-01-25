@@ -30,6 +30,7 @@
     "elysia": "^1.4.22",
     "lucide-react": "^0.563.0",
     "nanoid": "^5.1.6",
+    "nodemailer": "^7.0.12",
     "pg": "^8.17.2",
     "react": "^19",
     "react-dom": "^19",
@@ -42,6 +43,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^25.0.9",
+    "@types/nodemailer": "^7.0.5",
     "@types/pg": "^8.16.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",

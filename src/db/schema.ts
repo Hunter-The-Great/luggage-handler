@@ -5,6 +5,8 @@ import {
   pgEnum,
   boolean,
 } from "drizzle-orm/pg-core";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import { SQL, sql } from "drizzle-orm";
 
 export const roles = pgEnum("roles", ["admin", "airline", "gate", "ground"]);
 
@@ -22,3 +24,7 @@ export const usersTable = pgTable("users", {
 });
 
 export type RoleType = (typeof roles.enumValues)[number];
+
+export function lower(email: AnyPgColumn): SQL {
+  return sql`lower(${email})`;
+}

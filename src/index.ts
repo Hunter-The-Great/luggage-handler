@@ -4,12 +4,13 @@ import chalk from "chalk";
 import { nanoid } from "nanoid";
 import { jwt } from "@elysiajs/jwt";
 import { db } from "./lib/db";
-import { usersTable } from "./db/schema";
+import { lower, usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { env } from "./lib/env";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { generatePassword } from "./lib/password";
 import { ChangePassword } from "./changePassword";
+import { transport } from "./lib/email";
 
 export type Todo = {
   id: string;
@@ -223,24 +224,21 @@ const adminRouter = new Elysia({ prefix: "/admin" })
           return status(400, "Invalid role");
       }
       try {
-        let username = body.lastName;
+        let username = body.lastName.toLowerCase();
         const lastNames = await db
           .select()
           .from(usersTable)
-          .where(eq(usersTable.lastName, body.lastName));
+          .where(eq(lower(usersTable.lastName), body.lastName.toLowerCase()));
 
         if (lastNames.length > 0) {
           lastNames.sort((a, b) => a.id - b.id);
           const prevName = lastNames[lastNames.length - 1];
           if (!prevName || !prevName.lastName)
-            return { success: false, message: "Failed to generate username" };
+            return status(400, "Failed to generate username");
           const id =
             parseInt(prevName.username.substring(prevName.lastName.length)) + 1;
           if (id < 0 || id > 99) {
-            return {
-              success: false,
-              message: "Failed to generate username",
-            };
+            return status(400, "Failed to generate username");
           }
           if (id < 10) {
             username += "0" + id;
@@ -251,8 +249,6 @@ const adminRouter = new Elysia({ prefix: "/admin" })
           username += "00";
         }
         const password = generatePassword();
-        // TODO: email the login
-        console.log(password);
         await db.insert(usersTable).values({
           username: username,
           password: await Bun.password.hash(password, {
@@ -265,13 +261,80 @@ const adminRouter = new Elysia({ prefix: "/admin" })
           phone: body.phone,
           airline: body.airline,
         });
+        const info = await transport.sendMail({
+          from: env.CLIENT_EMAIL,
+          to: body.email,
+          subject: "Luggage Handler Account Created",
+          html: `<!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+          }
+          h2 {
+            color: #1a1a1a;
+            font-weight: 500;
+            margin-bottom: 24px;
+          }
+          .credentials {
+            background-color: #f8f9fa;
+            border-left: 3px solid #666;
+            padding: 16px 20px;
+            margin: 24px 0;
+          }
+          .credential-row {
+            margin: 8px 0;
+          }
+          .label {
+            color: #666;
+            font-size: 14px;
+          }
+          .value {
+            font-family: 'Courier New', monospace;
+            color: #1a1a1a;
+            font-size: 15px;
+          }
+          .note {
+            color: #666;
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 24px;
+          }
+        </style>
+      </head>
+      <body>
+        <h2>Hello ${body.firstName} ${body.lastName},</h2>
+        
+        <p>Your account has been created. Below are your login credentials:</p>
+        
+        <div class="credentials">
+          <div class="credential-row">
+            <div class="label">Email</div>
+            <div class="value">${username}</div>
+          </div>
+          <div class="credential-row">
+            <div class="label">Temporary Password</div>
+            <div class="value">${password}</div>
+          </div>
+        </div>
+        
+        <p>Please note you will be required to change your password upon logging in for the first time.</p>
+      </body>
+      </html>`,
+        });
+        console.log("-----------------------------------------2");
+        console.log(info);
+
         return { success: true };
       } catch (error) {
         console.log(error);
-        return {
-          success: false,
-          message: "Failed to register",
-        };
+        return status(400, "Failed to register");
       }
     },
     {
@@ -302,7 +365,7 @@ const server = Bun.serve({
 export type Api = typeof elysia;
 
 console.log(
-  chalk.green("Server running at"),
+  chalk.green("> Server running at"),
   chalk.yellow.underline(server.url),
 );
 
@@ -314,10 +377,11 @@ if (
   await db
     .select()
     .from(usersTable)
+    .where(eq(usersTable.username, "admin"))
     .then((users) => users.length === 0)
 ) {
   process.stdout.write(
-    chalk.yellow("Admin user not found, creating default admin account... "),
+    chalk.yellow("> Admin user not found, creating default admin account... "),
   );
   await db.insert(usersTable).values({
     username: "admin",
@@ -329,3 +393,11 @@ if (
   });
   console.log(chalk.green("success"));
 }
+
+transport.verify((error) => {
+  if (error) {
+    console.log(chalk.red("> Error Initializing email service:\n"), error);
+  } else {
+    console.log(chalk.green("> Server is ready to send emails"));
+  }
+});

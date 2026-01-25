@@ -18,6 +18,8 @@ import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Separator } from "./components/ui/separator";
 import { Form } from "./components/form";
+import { transport } from "./lib/email";
+import { env } from "./lib/env";
 
 const ThemeContext = createContext<null | string>(null);
 

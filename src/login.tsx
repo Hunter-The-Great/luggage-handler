@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "./checkAuth";
 import { useNavigate } from "react-router";
 import { Form } from "./components/form";
+import { Input } from "./components/ui/input";
 
 export const LoginForm = () => {
   const { login } = useAuth();
@@ -33,14 +34,14 @@ export const LoginForm = () => {
           submitArgs={[username, password]}
         >
           <label className="opacity-80 text-sm">Username</label>
-          <input
+          <Input
             type="text"
             className="border"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
           <label className="pt-4 opacity-80 text-sm">Password</label>
-          <input
+          <Input
             type="password"
             className="border"
             value={password}
