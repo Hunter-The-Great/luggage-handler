@@ -17,6 +17,7 @@ import { AuthProvider, RoleGuard, useAuth } from "./checkAuth";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Separator } from "./components/ui/separator";
+import { Form } from "./components/form";
 
 const ThemeContext = createContext<null | string>(null);
 
@@ -128,10 +129,12 @@ const AddUserForm = () => {
   };
 
   return (
-    <div className="flex bg-neutral-700/40 border w-1/2 rounded-lg border-neutral-600 px-4 shadow p-3  flex-col">
-      <h1 className="pb-1 font-semibold text-lg">Create a User</h1>
-      <Separator />
-      <label className="opacity-80 pt-4 text-sm">Role</label>
+    <Form
+      title="Add a User"
+      loading={loading}
+      error={error}
+      handleSubmit={handleSubmit}
+    >
       <select
         className="p-1 border rounded-lg"
         onChange={(e) => setRole(e.target.value as RoleType)}
@@ -144,7 +147,7 @@ const AddUserForm = () => {
       </select>
       <div className="flex h-2" />
       <div className="flex gap-4">
-        <div>
+        <div className="grow">
           <label className="opacity-80 text-sm">First Name</label>
           <Input
             type="text"
@@ -153,7 +156,7 @@ const AddUserForm = () => {
             onChange={(e) => setFirstName(e.target.value)}
           ></Input>
         </div>
-        <div>
+        <div className="grow">
           <label className="opacity-80 text-sm">Last Name</label>
           <Input
             type="text"
@@ -188,20 +191,7 @@ const AddUserForm = () => {
         value={airline}
         onChange={(e) => setAirline(e.target.value)}
       ></Input>
-      <div className="pt-4 flex justify-between items-center">
-        {loading ? <div className="text-center text-lg">{loading}</div> : null}
-        {error ? (
-          <div className="text-red-400 text-lg text-center">{error}</div>
-        ) : null}
-        <Button
-          variant="primary"
-          className="self-end"
-          onClick={() => handleSubmit()}
-        >
-          Add User
-        </Button>
-      </div>
-    </div>
+    </Form>
   );
 };
 

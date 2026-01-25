@@ -42,7 +42,7 @@ export const TopBar = () => {
     return (
       <>
         <button
-          className="px-2 py-1 rounded-lg  bg-neutral-700/80 hover:bg-neutral-700 transition duration-200"
+          className="px-2 py-1 rounded-lg text-sm  bg-neutral-700/80 hover:bg-neutral-700 transition duration-200"
           onClick={() => handleLogin()}
         >
           Login
@@ -54,7 +54,7 @@ export const TopBar = () => {
   const HomeButton = () => {
     return (
       <>
-        <button className="p-1 bg-blue-700/80 rounded-xl hover:bg-neutral-700 transition duration-200">
+        <button className="p-1 border bg-blue-700/80 rounded-xl hover:bg-blue-800/70 border-blue-600/80 hover:border-blue-700/60 hover:shadow transition duration-200">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "./checkAuth";
 import { useNavigate } from "react-router";
+import { Form } from "./components/form";
 
 export const LoginForm = () => {
   const { login } = useAuth();
@@ -11,6 +12,7 @@ export const LoginForm = () => {
 
   const handleSubmit = async (username: string, password: string) => {
     const result = await login(username, password);
+    console.log(username, password);
 
     setError(result.message || null);
 
@@ -22,23 +24,30 @@ export const LoginForm = () => {
   };
 
   return (
-    <>
-      <label>Username</label>
-      <input
-        type="text"
-        className="border"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <label>Password</label>
-      <input
-        type="password"
-        className="border"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button onClick={() => handleSubmit(username, password)}>Login</button>
-      {error ? <div className="text-red-600">{error}</div> : null}
-    </>
+    <div className="flex flex-col justify-center items-center">
+      <div className="flex flex-col justify-center items-center self-center p-20 w-3/5">
+        <Form
+          title="Login"
+          error={error}
+          handleSubmit={handleSubmit}
+          submitArgs={[username, password]}
+        >
+          <label className="opacity-80 text-sm">Username</label>
+          <input
+            type="text"
+            className="border"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <label className="pt-4 opacity-80 text-sm">Password</label>
+          <input
+            type="password"
+            className="border"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </Form>
+      </div>
+    </div>
   );
 };

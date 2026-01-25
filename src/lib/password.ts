@@ -3,6 +3,5 @@ export function generatePassword() {
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const array = new Uint8Array(15);
   crypto.getRandomValues(array);
-  console.log(array);
   return Array.from(array, (byte) => chars[byte % chars.length]).join("");
 }
