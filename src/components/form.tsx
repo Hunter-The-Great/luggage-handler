@@ -1,10 +1,13 @@
 import type { ReactNode } from "react";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
+import { Spinner } from "./ui/spinner";
+import { toast } from "sonner";
 
 export const Form = (props: {
   title: string;
   loading?: string | null;
+  success?: string | null;
   error?: string | null;
   handleSubmit: (...args: any) => void;
   submitArgs?: Array<any>;
@@ -19,11 +22,19 @@ export const Form = (props: {
       <div className="pt-4 flex justify-between items-center">
         <div>
           {props.loading ? (
-            <div className="text-center text-lg">{props.loading}</div>
+            <div className="flex flex-row items-center">
+              <Spinner />
+              <div className="text-center pl-1 text-lg">{props.loading}</div>
+            </div>
           ) : null}
           {props.error ? (
             <div className="text-red-400 text-lg text-center">
               {props.error}
+            </div>
+          ) : null}
+          {props.success ? (
+            <div className="text-green-400 text-lg text-center">
+              {props.success}
             </div>
           ) : null}
         </div>

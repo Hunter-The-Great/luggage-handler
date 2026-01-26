@@ -4,6 +4,7 @@ import { client } from "./client";
 import { Input } from "./components/ui/input";
 import { Form } from "./components/form";
 import { Separator } from "./components/ui/separator";
+import { Label } from "./components/ui/label";
 
 export const PasswordForm = () => {
   const [status, setStatus] = useState<null | string>(null);
@@ -11,6 +12,7 @@ export const PasswordForm = () => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
+  const [success, setSuccess] = useState<null | string>(null);
   const { logout } = useAuth();
 
   const HandleSubmit = async () => {
@@ -27,7 +29,8 @@ export const PasswordForm = () => {
       setError(response.error.value.toString());
       return;
     }
-    setStatus("Password changed – logging out...");
+    setStatus(null);
+    setSuccess("Password changed – logging out...");
     setTimeout(() => {
       logout();
     }, 2000);
@@ -39,9 +42,10 @@ export const PasswordForm = () => {
         title="Change Password"
         loading={status}
         error={error}
+        success={success}
         handleSubmit={HandleSubmit}
       >
-        <label className="opacity-80 text-sm">Old Password</label>
+        <Label>Old Password</Label>
         <Input
           className="border"
           type="password"
@@ -51,7 +55,7 @@ export const PasswordForm = () => {
         <div className="flex h-4" />
         <div className="flex gap-4">
           <div className="grow">
-            <label className="opacity-80 text-sm">New Password</label>
+            <Label>New Password</Label>
             <Input
               className="border"
               type="password"
@@ -60,7 +64,7 @@ export const PasswordForm = () => {
             />
           </div>
           <div className="grow">
-            <label className="opacity-80 text-sm">Confirm New Password</label>
+            <Label>Confirm New Password</Label>
             <Input
               className="border"
               type="password"

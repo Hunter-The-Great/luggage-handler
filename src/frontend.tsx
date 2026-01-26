@@ -15,6 +15,7 @@ import type { ReactNode } from "react";
 import { PasswordForm } from "./passwordForm";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TopBar } from "./topBar";
+import { Toaster } from "sonner";
 
 const Redirect = () => {
   const { user } = useAuth();
@@ -46,6 +47,7 @@ function start() {
   root.render(
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
+        <Toaster />
         <BrowserRouter>
           <Routes>
             <Route

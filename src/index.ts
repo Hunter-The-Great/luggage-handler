@@ -261,7 +261,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
           phone: body.phone,
           airline: body.airline,
         });
-        const info = await transport.sendMail({
+        await transport.sendMail({
           from: env.CLIENT_EMAIL,
           to: body.email,
           subject: "Luggage Handler Account Created",
@@ -328,8 +328,6 @@ const adminRouter = new Elysia({ prefix: "/admin" })
       </body>
       </html>`,
         });
-        console.log("-----------------------------------------2");
-        console.log(info);
 
         return { success: true };
       } catch (error) {

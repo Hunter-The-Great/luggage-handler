@@ -2,32 +2,25 @@ import { createContext, useContext, useEffect, useState } from "react";
 import "./index.css";
 import type { Todo } from ".";
 import { useTodos } from "./useTodos";
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
+import { useQueryClient, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { client } from "./client";
 import type { RoleType } from "./db/schema";
 import { roles } from "./db/schema";
-import { AuthProvider, RoleGuard, useAuth } from "./checkAuth";
-import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
-import { Separator } from "./components/ui/separator";
 import { Form } from "./components/form";
-import { transport } from "./lib/email";
-import { env } from "./lib/env";
+import { Label } from "./components/ui/label";
+import { toast } from "sonner";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "./components/ui/native-select";
 
 const ThemeContext = createContext<null | string>(null);
 
 const queryClient = new QueryClient();
 
 export function App() {
-  const [mode, setMode] = useState("dark");
-
   return (
     <div className="flex flex-col justify-center items-center p-6">
       <AddUserForm />
@@ -104,8 +97,17 @@ const AddUserForm = () => {
   const [airline, setAirline] = useState("");
   const [error, setError] = useState<null | string>(null);
   const [loading, setLoading] = useState<null | string>(null);
+  const [success, setSuccess] = useState<null | string>(null);
 
   const handleSubmit = async () => {
+    /*
+    toast.success("User created successfully", {
+      position: "top-center",
+      dismissible: true,
+    });
+    return;
+    */
+    setSuccess(null);
     setError(null);
     setLoading("Processing...");
     const result = await client.api.admin.register.post({
@@ -120,13 +122,18 @@ const AddUserForm = () => {
       setError(result.error.value.toString());
       setLoading(null);
     } else {
-      setLoading("Success");
+      setLoading(null);
       setError(null);
+      setSuccess("Success");
       setEmail("");
       setPhone("");
       setAirline("");
       setFirstName("");
       setLastName("");
+      toast.success("User created successfully", {
+        position: "top-center",
+        dismissible: true,
+      });
     }
   };
 
@@ -135,22 +142,21 @@ const AddUserForm = () => {
       title="Add a User"
       loading={loading}
       error={error}
+      success={success}
       handleSubmit={handleSubmit}
     >
-      <select
-        className="p-1 border rounded-lg"
-        onChange={(e) => setRole(e.target.value as RoleType)}
-      >
-        <option value="">Select a role</option>
+      <Label>Role</Label>
+      <NativeSelect onChange={(e) => setRole(e.target.value as RoleType)}>
+        <NativeSelectOption value="">Select a role</NativeSelectOption>
         {roles.enumValues.map((role) => {
           if (role === "admin") return;
-          return <option value={role}>{role}</option>;
+          return <NativeSelectOption value={role}>{role}</NativeSelectOption>;
         })}
-      </select>
+      </NativeSelect>
       <div className="flex h-2" />
       <div className="flex gap-4">
         <div className="grow">
-          <label className="opacity-80 text-sm">First Name</label>
+          <Label>First Name</Label>
           <Input
             type="text"
             className="border rounded-lg"
@@ -159,7 +165,7 @@ const AddUserForm = () => {
           ></Input>
         </div>
         <div className="grow">
-          <label className="opacity-80 text-sm">Last Name</label>
+          <Label>Last Name</Label>
           <Input
             type="text"
             className="border rounded-lg"
@@ -169,7 +175,7 @@ const AddUserForm = () => {
         </div>
       </div>
       <div className="flex h-2" />
-      <label className="opacity-80 text-sm">Email</label>
+      <Label>Email</Label>
       <Input
         type="text"
         className="border rounded-lg"
@@ -178,7 +184,7 @@ const AddUserForm = () => {
         onChange={(e) => setEmail(e.target.value)}
       ></Input>
       <div className="flex h-2" />
-      <label className="opacity-80 text-sm">Phone</label>
+      <Label>Phone</Label>
       <Input
         type="text"
         className="border rounded-lg"
@@ -186,7 +192,7 @@ const AddUserForm = () => {
         onChange={(e) => setPhone(e.target.value)}
       ></Input>
       <div className="flex h-2" />
-      <label className="opacity-80 text-sm">Airline</label>
+      <Label>Airline</Label>
       <Input
         type="text"
         className="border rounded-lg"
