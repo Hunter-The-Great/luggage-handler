@@ -13,35 +13,35 @@ export const PasswordForm = () => {
   const { logout } = useAuth();
 
   const HandleSubmit = async () => {
-    await toast
-      .promise(
-        new Promise<void>(async (resolve, reject) => {
-          const response = await client.api.auth["change-password"].post({
+    toast.promise(
+      new Promise<void>(async (resolve, reject) => {
+        client.api.auth["change-password"]
+          .post({
             oldPassword,
             newPassword,
             confirmation,
+          })
+          .then((res) => {
+            if (res.error) {
+              reject(res.error.value);
+            } else {
+              setOldPassword("");
+              setNewPassword("");
+              setConfirmation("");
+              setTimeout(() => {
+                logout();
+              }, 2000);
+              resolve();
+            }
           });
-          if (response.error) {
-            reject();
-          }
-          resolve();
-        }),
-        {
-          position: "top-center",
-          loading: "Changing password...",
-          success: "Password changed successfully, logging out",
-          error: "Failed to change password",
-        },
-      )
-      .unwrap()
-      .then(() => {
-        setOldPassword("");
-        setNewPassword("");
-        setConfirmation("");
-        setTimeout(() => {
-          logout();
-        }, 2000);
-      });
+      }),
+      {
+        position: "top-center",
+        loading: "Changing password...",
+        success: "Password changed successfully, logging out",
+        error: (err) => err,
+      },
+    );
   };
 
   return (

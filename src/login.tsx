@@ -15,29 +15,17 @@ export const LoginForm = () => {
 
   const handleSubmit = async (username: string, password: string) => {
     setLoading(" ");
-    await toast
-      .promise(
-        new Promise<void>(async (resolve, reject) => {
-          const res = await login(username, password);
-          if (res.success) {
-            resolve();
-          }
-          reject();
-        }),
-        {
-          position: "top-center",
-          error: "Failed to login",
-        },
-      )
-      .unwrap()
-      .then(() => {
-        setUsername("");
-        setPassword("");
-        navigate("/");
-      })
-      .catch(() => {
-        setLoading(null);
+    const res = await login(username, password);
+    if (res.success) {
+      setUsername("");
+      setPassword("");
+      navigate("/");
+    } else {
+      setLoading(null);
+      toast.error("Invalid username or password", {
+        position: "top-center",
       });
+    }
   };
 
   return (

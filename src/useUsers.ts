@@ -1,5 +1,6 @@
 import { client } from "./client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { RoleType } from "./db/schema";
 
 const getUsers = async () => {
   const loaded = await client.api.admin.users.get();
@@ -31,9 +32,42 @@ export const useUsers = () => {
     },
   });
 
+  const AddUser = useMutation({
+    mutationFn: async (body: {
+      role: RoleType | null;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      airline: string;
+    }) => {
+      return new Promise<void>(async (resolve, reject) => {
+        const res = await client.api.admin.register.post({
+          role: body.role,
+          firstName: body.firstName,
+          lastName: body.lastName,
+          email: body.email,
+          phone: body.phone,
+          airline: body.airline,
+        });
+        if (res.error) {
+          // throw new Error(res.error.value.toString());
+          reject(res.error.value);
+        } else {
+          resolve();
+        }
+      });
+    },
+
+    onSuccess() {
+      refetch();
+    },
+  });
+
   return {
     users,
     RemoveUsers,
+    AddUser,
     isLoading: isFetching,
   };
 };

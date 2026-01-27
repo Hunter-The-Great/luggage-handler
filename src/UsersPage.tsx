@@ -60,12 +60,17 @@ export const UsersPage = () => {
       action: {
         label: "Delete",
         onClick: async () => {
-          toast.promise(RemoveUsers.mutateAsync(Array.from(selected)), {
-            position: "top-center",
-            loading: "Deleting users...",
-            success: "Users deleted successfully",
-            error: "Failed to delete users",
-          });
+          toast.promise(
+            RemoveUsers.mutateAsync(Array.from(selected)).then(() => {
+              setSelected(new Set());
+            }),
+            {
+              position: "top-center",
+              loading: "Deleting users...",
+              success: "Users deleted successfully",
+              error: "Failed to delete users",
+            },
+          );
         },
       },
       cancel: {
@@ -88,7 +93,6 @@ export const UsersPage = () => {
         </Button>
         <AddUserForm />
       </div>
-      <Separator />
       <Table>
         <TableHeader>
           <TableRow>
@@ -144,44 +148,37 @@ const AddUserForm = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [airline, setAirline] = useState("");
+  const { AddUser } = useUsers();
 
   const handleSubmit = async () => {
-    return new Promise<void>(async (resolve, reject) => {
-      await toast
-        .promise(
-          client.api.admin.register
-            .post({
-              role: role || null,
-              firstName,
-              lastName,
-              email,
-              phone,
-              airline,
-            })
-            .then((res) => {
-              if (res.error) {
-                throw new Error(res.error.value.toString());
-              }
-              resolve();
-            }),
-          {
-            position: "top-center",
-            loading: "Creating user...",
-            success: "User created successfully",
-            error: (err) => err.message || "Failed to create user",
-          },
-        )
-        .unwrap()
-        .then(() => {
-          setEmail("");
-          setPhone("");
-          setAirline("");
-          setFirstName("");
-          setLastName("");
+    return new Promise<void>(async (resolve) => {
+      toast.promise(
+        AddUser.mutateAsync({
+          role,
+          firstName,
+          lastName,
+          email,
+          phone,
+          airline,
         })
-        .catch(() => {
-          reject();
-        });
+          .then(() => {
+            setEmail("");
+            setPhone("");
+            setAirline("");
+            setFirstName("");
+            setLastName("");
+            resolve();
+          })
+          .catch((err) => {
+            throw new Error(err);
+          }),
+        {
+          position: "top-center",
+          loading: "Creating user...",
+          success: "User created successfully",
+          error: (err) => err.message || "Failed to create user",
+        },
+      );
     });
   };
 
