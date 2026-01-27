@@ -1,6 +1,6 @@
 import "./index.css";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { Button } from "./components/ui/button";
 
 export function AdminPage() {

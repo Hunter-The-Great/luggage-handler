@@ -2,22 +2,6 @@ import { db } from "./lib/db";
 import { usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
 
-/* NOTE: will need to take a user object to work
- *
-export const getPassword = async () => {
-  const foundUser = (
-    await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.username, user.username))
-  )[0];
-
-  if (!foundUser) return null;
-
-  return foundUser.password;
-};
-*/
-
 export const ChangePassword = async (
   user: any,
   oldPassword: string,

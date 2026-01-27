@@ -54,7 +54,7 @@ export const TopBar = () => {
   const HomeButton = () => {
     return (
       <>
-        <button className="p-1 border bg-blue-700/80 rounded-xl hover:bg-blue-800/70 border-blue-600/80 hover:border-blue-700/60 hover:shadow transition duration-200">
+        <button className="bg-blue-800 border border-blue-600/70 hover:border-blue-700/70 text-blue-50 hover:bg-blue-900/90 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800 hover:shadow dark:hover:shadow p-1 rounded-xl">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

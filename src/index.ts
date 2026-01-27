@@ -266,7 +266,6 @@ const adminRouter = new Elysia({ prefix: "/admin" })
           chalk.yellow("Email service temporarily disabled"),
         );
         console.log(chalk.green("> "), password);
-        await new Promise((resolve) => setTimeout(resolve, 10000));
         return { success: true }; // NOTE: remove this to enable emails again
         await transport.sendMail({
           from: env.CLIENT_EMAIL,
@@ -357,7 +356,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
     const users = await db
       .select()
       .from(usersTable)
-      .orderBy(usersTable.id)
+      .orderBy(usersTable.role)
       .catch(() => {
         throw status(500, "Failed to fetch users");
       });

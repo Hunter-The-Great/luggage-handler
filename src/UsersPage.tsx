@@ -21,6 +21,7 @@ import {
 import { Checkbox } from "./components/ui/checkbox";
 import { Button } from "./components/ui/button";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Separator } from "./components/ui/separator";
 
 export const UsersPage = () => {
   const { users, RemoveUsers } = useUsers();
@@ -74,10 +75,20 @@ export const UsersPage = () => {
     });
   };
 
+  // TODO: filter by role?
   return (
     <div className="flex flex-col justify-center items-center p-6">
-      <AddUserForm />
-      <Button onClick={HandleDelete}>Delete Selected</Button>
+      <div className="flex flex-row w-full justify-end gap-4 pb-4">
+        <Button
+          variant={"destructive"}
+          disabled={selected.size === 0}
+          onClick={HandleDelete}
+        >
+          Delete Selected
+        </Button>
+        <AddUserForm />
+      </div>
+      <Separator />
       <Table>
         <TableHeader>
           <TableRow>
@@ -94,30 +105,31 @@ export const UsersPage = () => {
             <TableCell>Email</TableCell>
             <TableCell>Phone</TableCell>
             <TableCell>Airline</TableCell>
-            <TableCell></TableCell>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
-            <TableRow id={user.id.toString()}>
-              <TableCell>
-                <Checkbox
-                  checked={selected.has(user.id)}
-                  onCheckedChange={(checked: boolean) =>
-                    HandleSelectRow(user.id, checked)
-                  }
-                />
-              </TableCell>
-              <TableCell>{user.username || "–"}</TableCell>
-              <TableCell>{user.role || "–"}</TableCell>
-              <TableCell>{user.firstName || "–"}</TableCell>
-              <TableCell>{user.lastName || "–"}</TableCell>
-              <TableCell>{user.email || "–"}</TableCell>
-              <TableCell>{user.phone || "–"}</TableCell>
-              <TableCell>{user.airline || "–"}</TableCell>
-              <TableCell>...</TableCell>
-            </TableRow>
-          ))}
+          {users.map((user) => {
+            if (user.role === "admin") return null;
+            return (
+              <TableRow id={user.id.toString()}>
+                <TableCell>
+                  <Checkbox
+                    checked={selected.has(user.id)}
+                    onCheckedChange={(checked: boolean) =>
+                      HandleSelectRow(user.id, checked)
+                    }
+                  />
+                </TableCell>
+                <TableCell>{user.username || "–"}</TableCell>
+                <TableCell>{user.role || "–"}</TableCell>
+                <TableCell>{user.firstName || "–"}</TableCell>
+                <TableCell>{user.lastName || "–"}</TableCell>
+                <TableCell>{user.email || "–"}</TableCell>
+                <TableCell>{user.phone || "–"}</TableCell>
+                <TableCell>{user.airline || "–"}</TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
       <ReactQueryDevtools initialIsOpen={false} />
@@ -132,7 +144,6 @@ const AddUserForm = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [airline, setAirline] = useState("");
-  const [open, setOpen] = useState(false);
 
   const handleSubmit = async () => {
     return new Promise<void>(async (resolve, reject) => {
