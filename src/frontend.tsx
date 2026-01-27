@@ -6,16 +6,19 @@
  */
 
 import { createRoot } from "react-dom/client";
-import { App } from "./App";
+import { AdminPage } from "./AdminPage";
 import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router";
 import { AuthProvider, useAuth } from "./checkAuth";
 import { LoginForm } from "./login";
-import type { RoleType } from "./db/schema";
+import { roles, type RoleType } from "./db/schema";
 import type { ReactNode } from "react";
 import { PasswordForm } from "./passwordForm";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TopBar } from "./topBar";
 import { Toaster } from "sonner";
+import { NotFound } from "./404";
+import { Forbidden } from "./403";
+import { UsersPage } from "./UsersPage";
 
 const Redirect = () => {
   const { user } = useAuth();
@@ -28,7 +31,7 @@ const Redirect = () => {
 };
 
 const RoleMap: Record<RoleType, ReactNode> = {
-  admin: <App />,
+  admin: <AdminPage />,
   airline: <div>airline</div>,
   gate: <div>gate</div>,
   ground: <div>ground</div>,
@@ -38,6 +41,16 @@ const LoginCheck = () => {
   const { user } = useAuth();
 
   return user ? <Outlet /> : <Navigate to="/login" />;
+};
+
+const RoleCheck = (props: { roles: RoleType[] }) => {
+  const { user } = useAuth();
+
+  if (props.roles.includes(user.role as RoleType)) {
+    return <Outlet />;
+  }
+
+  return <Forbidden />;
 };
 
 const queryClient = new QueryClient();
@@ -61,12 +74,12 @@ function start() {
               <Route element={<LoginCheck />}>
                 <Route path="/" element={<Redirect />} />
                 <Route path="/change-password" element={<PasswordForm />} />
+                <Route element={<RoleCheck roles={["admin"]} />}>
+                  <Route path="/users" element={<UsersPage />} />
+                </Route>
               </Route>
               <Route path="/login" element={<LoginForm />} />
-              <Route
-                path="*"
-                element={<div> Not Found or you do not have permission.</div>}
-              />
+              <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
         </BrowserRouter>

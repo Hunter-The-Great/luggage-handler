@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 import { jwt } from "@elysiajs/jwt";
 import { db } from "./lib/db";
 import { lower, usersTable } from "./db/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { env } from "./lib/env";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { generatePassword } from "./lib/password";
@@ -261,6 +261,13 @@ const adminRouter = new Elysia({ prefix: "/admin" })
           phone: body.phone,
           airline: body.airline,
         });
+        console.log(
+          chalk.green("> "),
+          chalk.yellow("Email service temporarily disabled"),
+        );
+        console.log(chalk.green("> "), password);
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+        return { success: true }; // NOTE: remove this to enable emails again
         await transport.sendMail({
           from: env.CLIENT_EMAIL,
           to: body.email,
@@ -310,9 +317,9 @@ const adminRouter = new Elysia({ prefix: "/admin" })
       </head>
       <body>
         <h2>Hello ${body.firstName} ${body.lastName},</h2>
-        
+
         <p>Your account has been created. Below are your login credentials:</p>
-        
+
         <div class="credentials">
           <div class="credential-row">
             <div class="label">Email</div>
@@ -323,7 +330,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
             <div class="value">${password}</div>
           </div>
         </div>
-        
+
         <p>Please note you will be required to change your password upon logging in for the first time.</p>
       </body>
       </html>`,
@@ -343,6 +350,28 @@ const adminRouter = new Elysia({ prefix: "/admin" })
         email: t.Nullable(t.String()),
         phone: t.Nullable(t.String()),
         airline: t.Nullable(t.String()),
+      }),
+    },
+  )
+  .get("/users", async ({ status }) => {
+    const users = await db
+      .select()
+      .from(usersTable)
+      .orderBy(usersTable.id)
+      .catch(() => {
+        throw status(500, "Failed to fetch users");
+      });
+    return status(200, users);
+  })
+  .delete(
+    "/users",
+    async ({ body, status }) => {
+      await db.delete(usersTable).where(inArray(usersTable.id, body.ids));
+      return status(204);
+    },
+    {
+      body: t.Object({
+        ids: t.Array(t.Number()),
       }),
     },
   );

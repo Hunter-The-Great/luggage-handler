@@ -4,25 +4,40 @@ import { useNavigate } from "react-router";
 import { Form } from "./components/form";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
+import { toast } from "sonner";
 
 export const LoginForm = () => {
   const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<null | string>(null);
+  const [loading, setLoading] = useState<null | string>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (username: string, password: string) => {
-    const result = await login(username, password);
-    console.log(username, password);
-
-    setError(result.message || null);
-
-    if (result.success) {
-      setUsername("");
-      setPassword("");
-      navigate("/");
-    }
+    setLoading(" ");
+    await toast
+      .promise(
+        new Promise<void>(async (resolve, reject) => {
+          const res = await login(username, password);
+          if (res.success) {
+            resolve();
+          }
+          reject();
+        }),
+        {
+          position: "top-center",
+          error: "Failed to login",
+        },
+      )
+      .unwrap()
+      .then(() => {
+        setUsername("");
+        setPassword("");
+        navigate("/");
+      })
+      .catch(() => {
+        setLoading(null);
+      });
   };
 
   return (
@@ -30,8 +45,8 @@ export const LoginForm = () => {
       <div className="flex flex-col justify-center items-center self-center p-20 w-3/5">
         <Form
           title="Login"
-          error={error}
           handleSubmit={handleSubmit}
+          loading={loading}
           submitArgs={[username, password]}
         >
           <Label>Username</Label>

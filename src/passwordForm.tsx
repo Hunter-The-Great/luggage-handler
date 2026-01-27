@@ -3,48 +3,50 @@ import { useAuth } from "./checkAuth";
 import { client } from "./client";
 import { Input } from "./components/ui/input";
 import { Form } from "./components/form";
-import { Separator } from "./components/ui/separator";
 import { Label } from "./components/ui/label";
+import { toast } from "sonner";
 
 export const PasswordForm = () => {
-  const [status, setStatus] = useState<null | string>(null);
-  const [error, setError] = useState<null | string>(null);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
-  const [success, setSuccess] = useState<null | string>(null);
   const { logout } = useAuth();
 
   const HandleSubmit = async () => {
-    setError(null);
-    setStatus("Processing...");
-    const response = await client.api.auth["change-password"].post({
-      oldPassword,
-      newPassword,
-      confirmation,
-    });
-    console.log(response);
-    if (response.error) {
-      setStatus(null);
-      setError(response.error.value.toString());
-      return;
-    }
-    setStatus(null);
-    setSuccess("Password changed – logging out...");
-    setTimeout(() => {
-      logout();
-    }, 2000);
+    await toast
+      .promise(
+        new Promise<void>(async (resolve, reject) => {
+          const response = await client.api.auth["change-password"].post({
+            oldPassword,
+            newPassword,
+            confirmation,
+          });
+          if (response.error) {
+            reject();
+          }
+          resolve();
+        }),
+        {
+          position: "top-center",
+          loading: "Changing password...",
+          success: "Password changed successfully, logging out",
+          error: "Failed to change password",
+        },
+      )
+      .unwrap()
+      .then(() => {
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmation("");
+        setTimeout(() => {
+          logout();
+        }, 2000);
+      });
   };
 
   return (
     <div className="flex justify-center items-center p-6">
-      <Form
-        title="Change Password"
-        loading={status}
-        error={error}
-        success={success}
-        handleSubmit={HandleSubmit}
-      >
+      <Form title="Change Password" handleSubmit={HandleSubmit}>
         <Label>Old Password</Label>
         <Input
           className="border"
