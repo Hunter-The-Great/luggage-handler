@@ -109,7 +109,14 @@ export const PassengerPage = () => {
         <TableBody>
           {passengers.map((passenger) => {
             return (
-              <TableRow id={passenger.id.toString()}>
+              <TableRow
+                className={
+                  passenger.remove
+                    ? "bg-red-800/50 dark:hover:bg-red-900/60"
+                    : ""
+                }
+                id={passenger.id.toString()}
+              >
                 <TableCell>
                   <Checkbox
                     checked={selected.has(passenger.id)}
@@ -125,9 +132,11 @@ export const PassengerPage = () => {
                 <TableCell>{passenger.flight || "–"}</TableCell>
                 <TableCell>
                   {passenger.remove ? (
-                    <p className="text-red-500">Flagged for removal</p>
+                    <p className="text-red-500 text-shadow-xs text-shadow-black/50 ">
+                      Flagged for removal
+                    </p>
                   ) : (
-                    "–"
+                    passenger.status || "–"
                   )}
                 </TableCell>
               </TableRow>
@@ -214,7 +223,7 @@ const AddPassengerForm = () => {
       <Input
         type="string"
         className="border rounded-lg"
-        placeholder="example@gmail.com"
+        placeholder="000000"
         value={identification || ""}
         onChange={(e) => setIdentification(e.target.value)}
       ></Input>
@@ -231,6 +240,7 @@ const AddPassengerForm = () => {
       <Input
         type="text"
         className="border rounded-lg"
+        placeholder="XX0000"
         value={flight}
         onChange={(e) => setFlight(e.target.value)}
       ></Input>

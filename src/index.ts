@@ -460,7 +460,28 @@ const adminRouter = new Elysia({ prefix: "/admin" })
         ids: t.Array(t.Number()),
       }),
     },
-  );
+  )
+  .get("/removals", async ({ status }) => {
+    const passengers = (
+      await db
+        .select()
+        .from(passengerTable)
+        .where(eq(passengerTable.remove, true))
+        .catch(() => {
+          throw status(500, "Failed to fetch passengers");
+        })
+    ).length;
+    const flights = (
+      await db
+        .select()
+        .from(flightTable)
+        .where(eq(flightTable.departed, true))
+        .catch(() => {
+          throw status(500, "Failed to fetch flights");
+        })
+    ).length;
+    return status(200, { passengers, flights });
+  });
 
 const elysia = new Elysia({ prefix: "/api" })
   .use(todoRouter)

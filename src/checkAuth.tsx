@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import { client } from "./client";
 import type { RoleType } from "./db/schema";
