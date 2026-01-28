@@ -19,6 +19,7 @@ import { Toaster } from "sonner";
 import { NotFound } from "./404";
 import { Forbidden } from "./403";
 import { UsersPage } from "./UsersPage";
+import { FlightPage } from "./flightPage";
 
 const Redirect = () => {
   const { user } = useAuth();
@@ -76,6 +77,7 @@ function start() {
                 <Route path="/change-password" element={<PasswordForm />} />
                 <Route element={<RoleCheck roles={["admin"]} />}>
                   <Route path="/users" element={<UsersPage />} />
+                  <Route path="/flights" element={<FlightPage />} />
                 </Route>
               </Route>
               <Route path="/login" element={<LoginForm />} />

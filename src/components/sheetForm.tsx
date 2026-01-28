@@ -20,9 +20,14 @@ export const SheetForm = (props: {
       <SheetTrigger className="bg-blue-800 rounded-lg border border-blue-600/70 hover:border-blue-700/70 text-blue-50 hover:bg-blue-900/90 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800 hover:shadow dark:hover:shadow px-2">
         {props.label}
       </SheetTrigger>
-      <SheetContent side="right" showCloseButton={false}>
-        <div className="flex flex-col h-3/4 justify-center pr-4">
-          <div className="flex bg-neutral-800/95 border rounded-lg border-neutral-600 px-4 shadow p-3 flex-col">
+      <SheetContent side="right">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+          }}
+          className="flex flex-col h-3/4 justify-center pr-4"
+        >
+          <div className="flex bg-transparent px-4 p-3 flex-col">
             <h1 className="pb-1 font-semibold text-lg">{props.title}</h1>
             <Separator />
             <div className="flex h-4" />
@@ -61,7 +66,7 @@ export const SheetForm = (props: {
               </Button>
             </div>
           </div>
-        </div>
+        </form>
       </SheetContent>
     </Sheet>
   );

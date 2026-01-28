@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { client } from "./client";
 import type { RoleType } from "./db/schema";
 import { roles } from "./db/schema";
 import { Input } from "./components/ui/input";
@@ -21,13 +20,12 @@ import {
 import { Checkbox } from "./components/ui/checkbox";
 import { Button } from "./components/ui/button";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { Separator } from "./components/ui/separator";
 
 export const UsersPage = () => {
   const { users, RemoveUsers } = useUsers();
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
-  const selectAll = selected.size === users.length;
+  const selectAll = selected.size === users.length && users.length != 0;
 
   const HandleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -83,13 +81,13 @@ export const UsersPage = () => {
   // TODO: filter by role?
   return (
     <div className="flex flex-col justify-center items-center p-6">
-      <div className="flex flex-row w-full justify-end gap-4 pb-4">
+      <div className="flex flex-row w-full justify-between gap-4 pb-4">
         <Button
           variant={"destructive"}
           disabled={selected.size === 0}
           onClick={HandleDelete}
         >
-          Delete Selected
+          Delete
         </Button>
         <AddUserForm />
       </div>

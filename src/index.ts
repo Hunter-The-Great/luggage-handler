@@ -4,8 +4,8 @@ import chalk from "chalk";
 import { nanoid } from "nanoid";
 import { jwt } from "@elysiajs/jwt";
 import { db } from "./lib/db";
-import { lower, usersTable } from "./db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { flightTable, lower, passengerTable, usersTable } from "./db/schema";
+import { eq, ilike, inArray } from "drizzle-orm";
 import { env } from "./lib/env";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { generatePassword } from "./lib/password";
@@ -80,6 +80,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
         id: t.Number(),
         username: t.String(),
         role: t.UnionEnum(["admin", "airline", "gate", "ground"]),
+        airline: t.String(),
         newAccount: t.Boolean(),
       }),
     }),
@@ -100,6 +101,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
           id: user.id,
           username: user.username,
           role: user.role,
+          airline: user.airline || "",
           newAccount: user.newAccount,
         });
 
@@ -116,6 +118,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
             username: user.username,
             id: user.id,
             role: user.role,
+            airline: user.airline || "",
             newAccount: user.newAccount,
           },
         };
@@ -181,6 +184,8 @@ const adminRouter = new Elysia({ prefix: "/admin" })
         id: t.Number(),
         username: t.String(),
         role: t.UnionEnum(["admin", "airline", "gate", "ground"]),
+        airline: t.String(),
+        newAccount: t.Boolean(),
       }),
     }),
   )
@@ -259,14 +264,14 @@ const adminRouter = new Elysia({ prefix: "/admin" })
           lastName: body.lastName,
           email: body.email,
           phone: body.phone,
-          airline: body.airline,
+          airline: body.airline?.toUpperCase(),
         });
         console.log(
           chalk.green("> "),
           chalk.yellow("Email service temporarily disabled"),
         );
         console.log(chalk.green("> "), password);
-        return { success: true }; // NOTE: remove this to enable emails again
+        return;
         await transport.sendMail({
           from: env.CLIENT_EMAIL,
           to: body.email,
@@ -352,16 +357,6 @@ const adminRouter = new Elysia({ prefix: "/admin" })
       }),
     },
   )
-  .get("/users", async ({ status }) => {
-    const users = await db
-      .select()
-      .from(usersTable)
-      .orderBy(usersTable.role)
-      .catch(() => {
-        throw status(500, "Failed to fetch users");
-      });
-    return status(200, users);
-  })
   .delete(
     "/users",
     async ({ body, status }) => {
@@ -373,12 +368,228 @@ const adminRouter = new Elysia({ prefix: "/admin" })
         ids: t.Array(t.Number()),
       }),
     },
+  )
+  .get(
+    "/users",
+    async ({ status, body }) => {
+      if (body && body.role) {
+        const users = await db
+          .select()
+          .from(usersTable)
+          .where(eq(usersTable.role, body.role))
+          .orderBy(usersTable.role)
+          .catch(() => {
+            throw status(500, "Failed to fetch users");
+          });
+        return status(200, users);
+      }
+      const users = await db
+        .select()
+        .from(usersTable)
+        .orderBy(usersTable.role)
+        .catch(() => {
+          throw status(500, "Failed to fetch users");
+        });
+      return status(200, users);
+    },
+    {
+      body: t.Object({
+        role: t.Nullable(t.UnionEnum(["admin", "airline", "gate", "ground"])),
+      }),
+    },
+  )
+  .get("/flights", async ({ status }) => {
+    const flights = await db
+      .select()
+      .from(flightTable)
+      .orderBy(flightTable.id)
+      .catch(() => {
+        throw status(500, "Failed to fetch flights");
+      });
+    return status(200, flights);
+  })
+  .post(
+    "/flights",
+    async ({ body, status }) => {
+      const flightRegex = /^\w{2}[0-9]{4}$/;
+      if (!flightRegex.test(body.flight)) {
+        return status(400, "Invalid flight number");
+      }
+      await db
+        .insert(flightTable)
+        .values({
+          flight: body.flight.toUpperCase(),
+        })
+        .catch((err) => {
+          if (
+            err.cause.message &&
+            err.cause.message.includes("duplicate key value")
+          ) {
+            throw status(400, "Flight already exists");
+          }
+          throw status(500, "Failed to create flight");
+        });
+      return status(201);
+    },
+    {
+      body: t.Object({
+        flight: t.String(),
+      }),
+    },
+  )
+  .delete(
+    "/flights",
+    async ({ body, status }) => {
+      try {
+        const flights = await db
+          .select()
+          .from(flightTable)
+          .where(inArray(flightTable.id, body.ids));
+        const tickets = flights.flatMap((flight) => flight.tickets);
+        await db
+          .delete(passengerTable)
+          .where(inArray(passengerTable.ticket, tickets));
+        await db.delete(flightTable).where(inArray(flightTable.id, body.ids));
+        return status(204);
+      } catch (error) {
+        return status(500, "Failed to remove flights");
+      }
+    },
+    {
+      body: t.Object({
+        ids: t.Array(t.Number()),
+      }),
+    },
   );
 
 const elysia = new Elysia({ prefix: "/api" })
   .use(todoRouter)
   .use(authRouter)
-  .use(adminRouter);
+  .use(adminRouter)
+  .use(
+    jwt({
+      name: "jwt",
+      secret: env.JWT_SECRET,
+      schema: t.Object({
+        id: t.Number(),
+        username: t.String(),
+        role: t.UnionEnum(["admin", "airline", "gate", "ground"]),
+        airline: t.String(),
+        newAccount: t.Boolean(),
+      }),
+    }),
+  )
+  .derive(async ({ jwt, cookie }) => {
+    const token = cookie.auth;
+    if (!token) return { user: null };
+
+    if (typeof token.value !== "string") return { user: null };
+    const payload = await jwt.verify(token.value);
+    if (!payload) return { user: null };
+
+    return { user: payload };
+  })
+  .onBeforeHandle(({ user, status }) => {
+    if (!user) return status(401);
+  })
+  .get(
+    "/passengers",
+    async ({ user, status, query }) => {
+      if (!user) return status(401);
+      if (user.role === "airline" || user.role === "gate") {
+        if (
+          !query.airline ||
+          query.airline?.toLowerCase() !== user.airline.toLowerCase()
+        ) {
+          return status(403);
+        }
+      }
+      if (query && query.airline) {
+        const passengers = await db
+          .select()
+          .from(passengerTable)
+          .where(ilike(passengerTable.flight, `${query.airline}%`))
+          .orderBy(passengerTable.flight)
+          .catch(() => {
+            throw status(500, "Failed to fetch passengers");
+          });
+        return status(200, passengers);
+      }
+      const passengers = await db
+        .select()
+        .from(passengerTable)
+        .orderBy(passengerTable.flight)
+        .catch(() => {
+          throw status(500, "Failed to fetch passengers");
+        });
+      return status(200, passengers);
+    },
+    {
+      query: t.Object({
+        airline: t.Nullable(t.String()),
+      }),
+    },
+  )
+  .delete(
+    "/passengers",
+    async ({ user, body, status }) => {
+      if (!user) return status(401);
+      if (user.role !== "admin") {
+        return status(403);
+      }
+      await db
+        .delete(passengerTable)
+        .where(inArray(passengerTable.id, body.ids));
+      return status(204);
+    },
+    {
+      body: t.Object({
+        ids: t.Array(t.Number()),
+      }),
+    },
+  )
+  .put(
+    "/passengers",
+    async ({ user, body, status }) => {
+      if (!user) return status(401);
+      if (user.role !== "admin") {
+        return status(403);
+      }
+      await db
+        .delete(passengerTable)
+        .where(inArray(passengerTable.id, body.ids));
+      return status(204);
+    },
+    {
+      body: t.Object({
+        ids: t.Array(t.Number()),
+      }),
+    },
+  )
+  .post(
+    "/passengers",
+    async ({ user, body, status }) => {
+      if (!user) return status(401);
+      if (user.role !== "admin") {
+        return status(403);
+      }
+      await db.insert(passengerTable).values({
+        firstName: body.firstName,
+        lastName: body.lastName,
+        identification: body.identification,
+        ticket: body.ticket,
+        flight: body.flight,
+        status: body.status,
+        remove: body.remove,
+      });
+      return status(204);
+    },
+    {
+      body: t.Object({
+        ids: t.Array(t.Number()),
+      }),
+    },
+  );
 
 const server = Bun.serve({
   port: 3000,

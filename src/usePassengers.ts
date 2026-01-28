@@ -2,35 +2,35 @@ import { client } from "./client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { RoleType } from "./db/schema";
 
-const getUsers = async () => {
-  const loaded = await client.api.admin.users.get();
+const getPassengers = async (airline: string | null) => {
+  const loaded = await client.api.passengers.get({ query: { airline } });
   if (loaded.error) {
-    throw new Error("Failed to load users");
+    throw new Error("Failed to load passengers");
   }
   return loaded.data;
 };
 
-export const useUsers = () => {
+export const usePassengers = (airline: string | null) => {
   const {
-    data: users,
+    data: passengers,
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ["users"],
-    queryFn: getUsers,
+    queryKey: ["passengers", airline],
+    queryFn: () => getPassengers(airline),
     initialData: [],
   });
 
-  const RemoveUsers = useMutation({
+  const removePassengers = useMutation({
     mutationFn: async (ids: number[]) =>
-      await client.api.admin.users.delete({ ids }),
+      await client.api.passengers.delete({ ids }),
 
     onSuccess() {
       refetch();
     },
   });
 
-  const AddUser = useMutation({
+  const addPassenger = useMutation({
     mutationFn: async (body: {
       role: RoleType | null;
       firstName: string;
@@ -62,9 +62,9 @@ export const useUsers = () => {
   });
 
   return {
-    users,
-    RemoveUsers,
-    AddUser,
+    passengers
+    removePassengers,
+    addPassenger,
     isLoading: isFetching,
   };
 };
