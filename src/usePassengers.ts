@@ -1,16 +1,18 @@
 import { client } from "./client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type { RoleType } from "./db/schema";
 
-const getPassengers = async (airline: string | null) => {
-  const loaded = await client.api.passengers.get({ query: { airline } });
+const getPassengers = async (airline: string) => {
+  const loaded = await client.api.passengers.get({
+    query: { airline: airline || "" },
+  });
   if (loaded.error) {
+    console.log(loaded.error.value);
     throw new Error("Failed to load passengers");
   }
   return loaded.data;
 };
 
-export const usePassengers = (airline: string | null) => {
+export const usePassengers = (airline: string) => {
   const {
     data: passengers,
     isFetching,
@@ -32,21 +34,19 @@ export const usePassengers = (airline: string | null) => {
 
   const addPassenger = useMutation({
     mutationFn: async (body: {
-      role: RoleType | null;
       firstName: string;
       lastName: string;
-      email: string;
-      phone: string;
-      airline: string;
+      identification: string;
+      ticket: string;
+      flight: string;
     }) => {
       return new Promise<void>(async (resolve, reject) => {
-        const res = await client.api.admin.register.post({
-          role: body.role,
+        const res = await client.api.passengers.put({
           firstName: body.firstName,
           lastName: body.lastName,
-          email: body.email,
-          phone: body.phone,
-          airline: body.airline,
+          identification: body.identification,
+          ticket: body.ticket,
+          flight: body.flight,
         });
         if (res.error) {
           reject(res.error.value);
@@ -62,7 +62,7 @@ export const usePassengers = (airline: string | null) => {
   });
 
   return {
-    passengers
+    passengers,
     removePassengers,
     addPassenger,
     isLoading: isFetching,

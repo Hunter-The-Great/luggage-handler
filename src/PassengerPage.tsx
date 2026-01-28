@@ -3,7 +3,7 @@ import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
 import { toast } from "sonner";
 import { SheetForm } from "./components/sheetForm";
-import { useFlights } from "./useFlights";
+import { usePassengers } from "./usePassengers";
 import {
   Table,
   TableBody,
@@ -14,16 +14,21 @@ import {
 import { Checkbox } from "./components/ui/checkbox";
 import { Button } from "./components/ui/button";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { useAuth } from "./checkAuth";
 
-export const FlightPage = () => {
-  const { flights, removeFlights } = useFlights();
+export const PassengerPage = () => {
+  const { user } = useAuth();
+  const { passengers, removePassengers } = usePassengers(
+    user.role === "admin" ? "" : user.airline,
+  );
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
-  const selectAll = selected.size === flights.length && flights.length !== 0;
+  const selectAll =
+    selected.size === passengers.length && passengers.length !== 0;
 
   const HandleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(new Set(flights.map((flight) => flight.id)));
+      setSelected(new Set(passengers.map((passenger) => passenger.id)));
     } else {
       setSelected(new Set());
     }
@@ -41,26 +46,26 @@ export const FlightPage = () => {
 
   const HandleDelete = async () => {
     if (selected.size === 0) {
-      toast.warning("Please select at least one flight to delete", {
+      toast.warning("Please select at least one passenger to delete", {
         position: "top-center",
       });
       return;
     }
-    toast.warning("Are you sure you want to delete these flights?", {
+    toast.warning("Are you sure you want to delete these passengers?", {
       position: "top-center",
       duration: Infinity,
       action: {
         label: "Delete",
         onClick: async () => {
           toast.promise(
-            removeFlights.mutateAsync(Array.from(selected)).then(() => {
+            removePassengers.mutateAsync(Array.from(selected)).then(() => {
               setSelected(new Set());
             }),
             {
               position: "top-center",
-              loading: "Removing flights...",
-              success: "Flights removed successfully",
-              error: "Failed to remove flights",
+              loading: "Removing Passengers...",
+              success: "Passengers removed successfully",
+              error: "Failed to remove passengers",
             },
           );
         },
@@ -82,7 +87,7 @@ export const FlightPage = () => {
         >
           Delete
         </Button>
-        <AddFlightForm />
+        <AddPassengerForm />
       </div>
       <Table>
         <TableHeader>
@@ -93,28 +98,36 @@ export const FlightPage = () => {
                 onCheckedChange={(checked: boolean) => HandleSelectAll(checked)}
               />
             </TableCell>
+            <TableCell>First Name</TableCell>
+            <TableCell>Last Name</TableCell>
+            <TableCell>Identification</TableCell>
+            <TableCell>Ticket</TableCell>
             <TableCell>Flight Number</TableCell>
             <TableCell>Status</TableCell>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {flights.map((flight) => {
+          {passengers.map((passenger) => {
             return (
-              <TableRow id={flight.id.toString()}>
+              <TableRow id={passenger.id.toString()}>
                 <TableCell>
                   <Checkbox
-                    checked={selected.has(flight.id)}
+                    checked={selected.has(passenger.id)}
                     onCheckedChange={(checked: boolean) =>
-                      HandleSelectRow(flight.id, checked)
+                      HandleSelectRow(passenger.id, checked)
                     }
                   />
                 </TableCell>
-                <TableCell>{flight.flight || "–"}</TableCell>
+                <TableCell>{passenger.firstName || "–"}</TableCell>
+                <TableCell>{passenger.lastName || "–"}</TableCell>
+                <TableCell>{passenger.identification || "–"}</TableCell>
+                <TableCell>{passenger.ticket || "–"}</TableCell>
+                <TableCell>{passenger.flight || "–"}</TableCell>
                 <TableCell>
-                  {flight.departed ? (
-                    <p className="text-green-400">Departed</p>
+                  {passenger.remove ? (
+                    <p className="text-red-500">Flagged for removal</p>
                   ) : (
-                    <p className="text-yellow-300">Not yet departed</p>
+                    "–"
                   )}
                 </TableCell>
               </TableRow>
@@ -127,19 +140,34 @@ export const FlightPage = () => {
   );
 };
 
-const AddFlightForm = () => {
+const AddPassengerForm = () => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [identification, setIdentification] = useState("");
+  const [ticket, setTicket] = useState("");
   const [flight, setFlight] = useState("");
-  const { addFlight } = useFlights();
+  const { user } = useAuth();
+  const { addPassenger } = usePassengers(
+    user.role === "admin" ? "" : user.airline,
+  );
 
   const handleSubmit = async () => {
     return new Promise<void>(async (resolve) => {
       toast.promise(
-        addFlight
+        addPassenger
           .mutateAsync({
+            firstName,
+            lastName,
+            identification: identification,
+            ticket: ticket,
             flight,
           })
           .then(() => {
             setFlight("");
+            setFirstName("");
+            setLastName("");
+            setIdentification("");
+            setTicket("");
             resolve();
           })
           .catch((err) => {
@@ -147,9 +175,9 @@ const AddFlightForm = () => {
           }),
         {
           position: "top-center",
-          loading: "Adding flight...",
-          success: "Flight added successfully",
-          error: (err) => err.message || "Failed to add flight",
+          loading: "Adding passenger...",
+          success: "Passenger added successfully",
+          error: (err) => err.message || "Failed to add Passenger",
         },
       );
     });
@@ -157,11 +185,49 @@ const AddFlightForm = () => {
 
   return (
     <SheetForm
-      title="Add a Flight"
-      label="Add Flight"
+      title="Add a Passenger"
+      label="Add User"
       handleSubmit={handleSubmit}
     >
-      <Label>Airline</Label>
+      <div className="flex gap-4">
+        <div className="grow">
+          <Label>First Name</Label>
+          <Input
+            type="text"
+            className="border rounded-lg"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          ></Input>
+        </div>
+        <div className="grow">
+          <Label>Last Name</Label>
+          <Input
+            type="text"
+            className="border rounded-lg"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          ></Input>
+        </div>
+      </div>
+      <div className="flex h-2" />
+      <Label>Identification</Label>
+      <Input
+        type="string"
+        className="border rounded-lg"
+        placeholder="example@gmail.com"
+        value={identification || ""}
+        onChange={(e) => setIdentification(e.target.value)}
+      ></Input>
+      <div className="flex h-2" />
+      <Label>Ticket Number</Label>
+      <Input
+        type="text"
+        className="border rounded-lg"
+        value={ticket}
+        onChange={(e) => setTicket(e.target.value)}
+      ></Input>
+      <div className="flex h-2" />
+      <Label>Flight Number</Label>
       <Input
         type="text"
         className="border rounded-lg"

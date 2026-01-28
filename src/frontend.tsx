@@ -20,6 +20,7 @@ import { NotFound } from "./404";
 import { Forbidden } from "./403";
 import { UsersPage } from "./UsersPage";
 import { FlightPage } from "./flightPage";
+import { PassengerPage } from "./PassengerPage";
 
 const Redirect = () => {
   const { user } = useAuth();
@@ -56,6 +57,8 @@ const RoleCheck = (props: { roles: RoleType[] }) => {
 
 const queryClient = new QueryClient();
 
+// TODO: redirect functions for /flights, /passengers, etc. pages
+// maybe make that ^ one generalized function?
 function start() {
   const root = createRoot(document.getElementById("root")!);
   root.render(
@@ -78,6 +81,7 @@ function start() {
                 <Route element={<RoleCheck roles={["admin"]} />}>
                   <Route path="/users" element={<UsersPage />} />
                   <Route path="/flights" element={<FlightPage />} />
+                  <Route path="/passengers" element={<PassengerPage />} />
                 </Route>
               </Route>
               <Route path="/login" element={<LoginForm />} />

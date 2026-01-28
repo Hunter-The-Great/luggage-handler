@@ -24,6 +24,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useLocalStorage<null | {
     username: string;
     role: RoleType;
+    airline: string;
     newAccount: boolean;
   }>("auth", null);
 

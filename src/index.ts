@@ -504,7 +504,7 @@ const elysia = new Elysia({ prefix: "/api" })
           return status(403);
         }
       }
-      if (query && query.airline) {
+      if (query.airline !== "") {
         const passengers = await db
           .select()
           .from(passengerTable)
@@ -526,7 +526,7 @@ const elysia = new Elysia({ prefix: "/api" })
     },
     {
       query: t.Object({
-        airline: t.Nullable(t.String()),
+        airline: t.String(),
       }),
     },
   )
@@ -555,38 +555,47 @@ const elysia = new Elysia({ prefix: "/api" })
       if (user.role !== "admin") {
         return status(403);
       }
-      await db
-        .delete(passengerTable)
-        .where(inArray(passengerTable.id, body.ids));
-      return status(204);
-    },
-    {
-      body: t.Object({
-        ids: t.Array(t.Number()),
-      }),
-    },
-  )
-  .post(
-    "/passengers",
-    async ({ user, body, status }) => {
-      if (!user) return status(401);
-      if (user.role !== "admin") {
-        return status(403);
+      const identification = parseInt(body.identification);
+      if (
+        isNaN(identification) ||
+        identification > 999999 ||
+        identification < 100000
+      ) {
+        return status(400, "Invalid identification number");
       }
-      await db.insert(passengerTable).values({
-        firstName: body.firstName,
-        lastName: body.lastName,
-        identification: body.identification,
-        ticket: body.ticket,
-        flight: body.flight,
-        status: body.status,
-        remove: body.remove,
-      });
+      const ticket = parseInt(body.ticket);
+      if (isNaN(ticket) || ticket > 9999999999 || ticket < 1000000000) {
+        return status(400, "Invalid ticket number");
+      }
+      const flightRegex = /^\w{2}[0-9]{4}$/;
+      if (!flightRegex.test(body.flight)) {
+        return status(400, "Invalid flight number");
+      }
+      // TODO: check to see if flight already exists?
+      // TODO: random ticket number?
+      await db
+        .insert(passengerTable)
+        .values({
+          firstName: body.firstName,
+          lastName: body.lastName,
+          identification: identification,
+          ticket: ticket,
+          flight: body.flight,
+        })
+        .catch((err) => {
+          if (err.cause.message.includes("duplicate key value")) {
+            throw status(400, "Ticket number already exists");
+          }
+        });
       return status(204);
     },
     {
       body: t.Object({
-        ids: t.Array(t.Number()),
+        firstName: t.String(),
+        lastName: t.String(),
+        identification: t.String(),
+        ticket: t.String(),
+        flight: t.String(),
       }),
     },
   );
