@@ -824,7 +824,50 @@ const elysia = new Elysia({ prefix: "/api" })
         ticket: t.Number(),
       }),
     },
-  );
+  )
+  .get("/flights", async ({ user, status }) => {
+    if (!user) return status(401);
+    let flights;
+    if (user.role === "gate") {
+      if (!user.airline) return status(403);
+      flights = await db
+        .select({
+          id: flightTable.id,
+          flight: flightTable.flight,
+          gate: flightTable.gate,
+          departed: flightTable.departed,
+          passengerCount: count(passengerTable.id),
+        })
+        .from(flightTable)
+        .where(ilike(flightTable.flight, `${user.airline}%`))
+        .leftJoin(passengerTable, eq(flightTable.flight, passengerTable.flight))
+        .groupBy(flightTable.id)
+        .orderBy(flightTable.id)
+        .catch(() => {
+          throw status(500, "Failed to fetch flights");
+        });
+    } else if (user.role === "admin") {
+      flights = await db
+        .select({
+          id: flightTable.id,
+          flight: flightTable.flight,
+          gate: flightTable.gate,
+          departed: flightTable.departed,
+          passengerCount: count(passengerTable.id),
+        })
+        .from(flightTable)
+        .leftJoin(passengerTable, eq(flightTable.flight, passengerTable.flight))
+        .groupBy(flightTable.id)
+        .orderBy(flightTable.id)
+        .catch(() => {
+          throw status(500, "Failed to fetch flights");
+        });
+    } else {
+      return status(403);
+    }
+
+    return status(200, flights);
+  });
 
 const server = Bun.serve({
   port: 3000,

@@ -10,7 +10,7 @@ import { AdminPage } from "./AdminPage";
 import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router";
 import { AuthProvider, useAuth } from "./checkAuth";
 import { LoginForm } from "./login";
-import { roles, type RoleType } from "./db/schema";
+import { type RoleType } from "./db/schema";
 import type { ReactNode } from "react";
 import { PasswordForm } from "./passwordForm";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -83,6 +83,9 @@ function start() {
                   <Route path="/users" element={<UsersPage />} />
                   <Route path="/flights" element={<FlightPage />} />
                   <Route path="/passengers" element={<PassengerPage />} />
+                </Route>
+                <Route element={<RoleCheck roles={["gate"]} />}>
+                  <Route path="/flights/:id" element={<FlightPage />} />
                 </Route>
               </Route>
               <Route path="/login" element={<LoginForm />} />

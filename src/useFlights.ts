@@ -2,7 +2,7 @@ import { client } from "./client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 const getFlights = async () => {
-  const loaded = await client.api.admin.flights.get();
+  const loaded = await client.api.flights.get();
   if (loaded.error) {
     throw new Error("Failed to load flights");
   }
