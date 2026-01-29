@@ -24,6 +24,7 @@ import { FlightPage } from "./pages/flightPage";
 import { PassengerPage } from "./pages/PassengerPage";
 import { AirlinePage } from "./pages/AirlinePage";
 import { GatePage } from "./pages/GatePage";
+import { Flight } from "./pages/Flight";
 
 const Redirect = () => {
   const { user } = useAuth();
@@ -87,7 +88,7 @@ function start() {
                   <Route path="/passengers" element={<PassengerPage />} />
                 </Route>
                 <Route element={<RoleCheck roles={["gate"]} />}>
-                  <Route path="/flights/:id" element={<div> dog div</div>} />
+                  <Route path="/flights/:id" element={<Flight />} />
                 </Route>
               </Route>
               <Route path="/login" element={<LoginForm />} />
