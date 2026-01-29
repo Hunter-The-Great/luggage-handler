@@ -1,7 +1,6 @@
 import { Elysia, t } from "elysia";
 import index from "./index.html";
 import chalk from "chalk";
-import { nanoid } from "nanoid";
 import { jwt } from "@elysiajs/jwt";
 import { db } from "./lib/db";
 import {
@@ -9,84 +8,15 @@ import {
   flightTable,
   lower,
   passengerTable,
-  statuses,
   usersTable,
 } from "./db/schema";
 import type { BagLocation, Status } from "./db/schema";
-import {
-  arrayContains,
-  count,
-  eq,
-  ilike,
-  inArray,
-  sql,
-  SQL,
-} from "drizzle-orm";
+import { count, eq, ilike, inArray } from "drizzle-orm";
 import { env } from "./lib/env";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { generatePassword } from "./lib/password";
 import { ChangePassword } from "./changePassword";
 import { transport } from "./lib/email";
-import { client } from "./client";
-
-export type Todo = {
-  id: string;
-  text: string;
-  complete: boolean;
-};
-
-const todos: Todo[] = [
-  {
-    text: "water plants",
-    id: "89239jvksjdkf",
-    complete: false,
-  },
-];
-
-const todoRouter = new Elysia({ prefix: "/todos" })
-  .get("/", async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return todos;
-  })
-  .post(
-    "/",
-    ({ body }) => {
-      const newTodo = {
-        id: nanoid(),
-        text: body.text,
-        complete: false,
-      };
-      todos.push(newTodo);
-      return newTodo;
-    },
-    {
-      body: t.Object({
-        text: t.String(),
-      }),
-    },
-  )
-  .put(
-    "/:id",
-    ({ params, body }) => {
-      const todo = todos.find((todo) => todo.id === params.id);
-      if (!todo) return 404;
-      todo.text = body.text;
-      todo.complete = body.complete;
-      return todo;
-    },
-    {
-      body: t.Object({
-        text: t.String(),
-        complete: t.Boolean(),
-      }),
-    },
-  )
-  .delete("/:id", ({ params }) => {
-    const index = todos.findIndex((todo) => todo.id === params.id);
-    if (index === -1) return 404;
-    todos.splice(index, 1);
-    return 204;
-  });
 
 const authRouter = new Elysia({ prefix: "/auth" })
   .use(
@@ -529,7 +459,6 @@ const adminRouter = new Elysia({ prefix: "/admin" })
   });
 
 const elysia = new Elysia({ prefix: "/api" })
-  .use(todoRouter)
   .use(authRouter)
   .use(adminRouter)
   .use(
