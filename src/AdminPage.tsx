@@ -33,11 +33,11 @@ export function AdminPage() {
           <Button variant={"large"} onClick={() => navigate("/users")}>
             Manage Users
           </Button>
-          <Button variant={"large"} onClick={() => navigate("/flights")}>
-            Manage Flights
-          </Button>
           <Button variant={"large"} onClick={() => navigate("/passengers")}>
             Manage Passengers
+          </Button>
+          <Button variant={"large"} onClick={() => navigate("/flights")}>
+            Manage Flights
           </Button>
           <ReactQueryDevtools initialIsOpen={false} />
         </div>

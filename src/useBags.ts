@@ -1,32 +1,32 @@
 import { client } from "./client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const getPassengers = async (airline: string) => {
-  const loaded = await client.api.passengers.get({
-    query: { airline: airline || "" },
-  });
+const getBags = async () => {
+  const loaded = await client.api.bags.get();
   if (loaded.error) {
     console.log(loaded.error.value);
-    throw new Error("Failed to load passengers");
+    throw new Error("Failed to load bags");
   }
   return loaded.data;
 };
 
-export const usePassengers = (airline: string) => {
+export const useBags = () => {
+  const queryClient = useQueryClient();
+
   const {
-    data: passengers,
+    data: bags,
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ["passengers", airline],
-    queryFn: () => getPassengers(airline),
+    queryKey: ["bags"],
+    queryFn: () => getBags(),
     initialData: [],
   });
 
-  const removePassengers = useMutation({
-    mutationFn: async (ids: number[]) => {
+  const removeBags = useMutation({
+    mutationFn: async (ticket: number) => {
       return new Promise<void>(async (resolve, reject) => {
-        const res = await client.api.passengers.delete({ ids });
+        const res = await client.api.bags.delete({ ticket });
         if (res.error) {
           reject(res.error.value);
         } else {
@@ -37,22 +37,25 @@ export const usePassengers = (airline: string) => {
 
     onSuccess() {
       refetch();
+      queryClient.invalidateQueries({ queryKey: ["passengers"] });
     },
   });
 
-  const addPassenger = useMutation({
+  const addBag = useMutation({
     mutationFn: async (body: {
-      firstName: string;
-      lastName: string;
-      identification: string;
-      flight: string;
+      terminal: string;
+      counter: string;
+      ticket: number;
     }) => {
       return new Promise<void>(async (resolve, reject) => {
-        const res = await client.api.passengers.post({
-          firstName: body.firstName,
-          lastName: body.lastName,
-          identification: body.identification,
-          flight: body.flight,
+        const counter = parseInt(body.counter);
+        if (isNaN(counter)) {
+          reject("Counter must be a number");
+        }
+        const res = await client.api.bags.post({
+          ticket: body.ticket,
+          terminal: body.terminal,
+          counter: counter,
         });
         if (res.error) {
           reject(res.error.value);
@@ -64,13 +67,14 @@ export const usePassengers = (airline: string) => {
 
     onSuccess() {
       refetch();
+      queryClient.invalidateQueries({ queryKey: ["passengers"] });
     },
   });
 
-  const updateStatus = useMutation({
+  const updateLocation = useMutation({
     mutationFn: async ({ id, flag }: { id: number; flag?: boolean }) => {
       return new Promise<void>(async (resolve, reject) => {
-        const res = await client.api.passengers.put({
+        const res = await client.api.bags.put({
           id,
           flag: flag || false,
         });
@@ -88,10 +92,10 @@ export const usePassengers = (airline: string) => {
   });
 
   return {
-    passengers,
-    removePassengers,
-    addPassenger,
-    updateStatus,
+    bags,
+    removeBags,
+    addBag,
+    updateLocation,
     isLoading: isFetching,
   };
 };

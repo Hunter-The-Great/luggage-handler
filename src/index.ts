@@ -4,13 +4,30 @@ import chalk from "chalk";
 import { nanoid } from "nanoid";
 import { jwt } from "@elysiajs/jwt";
 import { db } from "./lib/db";
-import { flightTable, lower, passengerTable, usersTable } from "./db/schema";
-import { eq, ilike, inArray } from "drizzle-orm";
+import {
+  bagTable,
+  flightTable,
+  lower,
+  passengerTable,
+  statuses,
+  usersTable,
+} from "./db/schema";
+import type { BagLocation, Status } from "./db/schema";
+import {
+  arrayContains,
+  count,
+  eq,
+  ilike,
+  inArray,
+  sql,
+  SQL,
+} from "drizzle-orm";
 import { env } from "./lib/env";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { generatePassword } from "./lib/password";
 import { ChangePassword } from "./changePassword";
 import { transport } from "./lib/email";
+import { client } from "./client";
 
 export type Todo = {
   id: string;
@@ -212,6 +229,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
         case "gate":
         case "airline":
           if (!body.airline) return status(400, "Airline is required");
+        // TODO: enforce airline to be 2 characters?
         case "ground":
           if (!body.firstName) return status(400, "First name is required");
           if (body.firstName.length < 2)
@@ -400,8 +418,16 @@ const adminRouter = new Elysia({ prefix: "/admin" })
   )
   .get("/flights", async ({ status }) => {
     const flights = await db
-      .select()
+      .select({
+        id: flightTable.id,
+        flight: flightTable.flight,
+        gate: flightTable.gate,
+        departed: flightTable.departed,
+        passengerCount: count(passengerTable.id),
+      })
       .from(flightTable)
+      .leftJoin(passengerTable, eq(flightTable.flight, passengerTable.flight))
+      .groupBy(flightTable.id)
       .orderBy(flightTable.id)
       .catch(() => {
         throw status(500, "Failed to fetch flights");
@@ -419,6 +445,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
         .insert(flightTable)
         .values({
           flight: body.flight.toUpperCase(),
+          gate: body.gate.toUpperCase(),
         })
         .catch((err) => {
           if (
@@ -434,6 +461,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
     {
       body: t.Object({
         flight: t.String(),
+        gate: t.String(),
       }),
     },
   )
@@ -445,10 +473,27 @@ const adminRouter = new Elysia({ prefix: "/admin" })
           .select()
           .from(flightTable)
           .where(inArray(flightTable.id, body.ids));
-        const tickets = flights.flatMap((flight) => flight.tickets);
+        const flightNumbers = flights.map((flight) => flight.flight);
+        const passengers = await db
+          .select()
+          .from(passengerTable)
+          .where(inArray(passengerTable.flight, flightNumbers))
+          .catch(() => {
+            throw status(500, "Failed to fetch passengers");
+          });
+        const tickets = passengers.map((passenger) => passenger.ticket);
+        await db
+          .delete(bagTable)
+          .where(inArray(bagTable.ticket, tickets))
+          .catch(() => {
+            throw status(500, "Failed to delete bags");
+          });
         await db
           .delete(passengerTable)
-          .where(inArray(passengerTable.ticket, tickets));
+          .where(inArray(passengerTable.flight, flightNumbers))
+          .catch(() => {
+            throw status(500, "Failed to delete passengers");
+          });
         await db.delete(flightTable).where(inArray(flightTable.id, body.ids));
         return status(204);
       } catch (error) {
@@ -527,9 +572,21 @@ const elysia = new Elysia({ prefix: "/api" })
       }
       if (query.airline !== "") {
         const passengers = await db
-          .select()
+          .select({
+            id: passengerTable.id,
+            firstName: passengerTable.firstName,
+            lastName: passengerTable.lastName,
+            identification: passengerTable.identification,
+            ticket: passengerTable.ticket,
+            flight: passengerTable.flight,
+            status: passengerTable.status,
+            remove: passengerTable.remove,
+            bags: count(bagTable.id),
+          })
           .from(passengerTable)
           .where(ilike(passengerTable.flight, `${query.airline}%`))
+          .leftJoin(bagTable, eq(passengerTable.ticket, bagTable.ticket))
+          .groupBy(passengerTable.id)
           .orderBy(passengerTable.flight)
           .catch(() => {
             throw status(500, "Failed to fetch passengers");
@@ -537,8 +594,20 @@ const elysia = new Elysia({ prefix: "/api" })
         return status(200, passengers);
       }
       const passengers = await db
-        .select()
+        .select({
+          id: passengerTable.id,
+          firstName: passengerTable.firstName,
+          lastName: passengerTable.lastName,
+          identification: passengerTable.identification,
+          ticket: passengerTable.ticket,
+          flight: passengerTable.flight,
+          status: passengerTable.status,
+          remove: passengerTable.remove,
+          bags: count(bagTable.id),
+        })
         .from(passengerTable)
+        .leftJoin(bagTable, eq(passengerTable.ticket, bagTable.ticket))
+        .groupBy(passengerTable.id)
         .orderBy(passengerTable.flight)
         .catch(() => {
           throw status(500, "Failed to fetch passengers");
@@ -558,9 +627,21 @@ const elysia = new Elysia({ prefix: "/api" })
       if (user.role !== "admin") {
         return status(403);
       }
+      const passengers = await db
+        .select()
+        .from(passengerTable)
+        .where(inArray(passengerTable.id, body.ids))
+        .catch(() => {
+          throw status(500, "Failed to fetch passengers");
+        });
+      const tickets = passengers.map((passenger) => passenger.ticket);
+      await db.delete(bagTable).where(inArray(bagTable.ticket, tickets));
       await db
         .delete(passengerTable)
-        .where(inArray(passengerTable.id, body.ids));
+        .where(inArray(passengerTable.id, body.ids))
+        .catch(() => {
+          throw status(500, "Failed to delete passengers");
+        });
       return status(204);
     },
     {
@@ -569,7 +650,7 @@ const elysia = new Elysia({ prefix: "/api" })
       }),
     },
   )
-  .put(
+  .post(
     "/passengers",
     async ({ user, body, status }) => {
       if (!user) return status(401);
@@ -584,16 +665,11 @@ const elysia = new Elysia({ prefix: "/api" })
       ) {
         return status(400, "Invalid identification number");
       }
-      const ticket = parseInt(body.ticket);
-      if (isNaN(ticket) || ticket > 9999999999 || ticket < 1000000000) {
-        return status(400, "Invalid ticket number");
-      }
+      const ticket = Math.floor(1000000000 + Math.random() * 9000000000);
       const flightRegex = /^\w{2}[0-9]{4}$/;
       if (!flightRegex.test(body.flight)) {
         return status(400, "Invalid flight number");
       }
-      // TODO: check to see if flight already exists?
-      // TODO: random ticket number?
       await db
         .insert(passengerTable)
         .values({
@@ -601,12 +677,17 @@ const elysia = new Elysia({ prefix: "/api" })
           lastName: body.lastName,
           identification: identification,
           ticket: ticket,
-          flight: body.flight,
+          flight: body.flight.toUpperCase(),
         })
         .catch((err) => {
+          if (err.cause.message.includes("violates foreign key constraint")) {
+            throw status(400, "Flight does not exist");
+          }
           if (err.cause.message.includes("duplicate key value")) {
             throw status(400, "Ticket number already exists");
           }
+          console.log(err);
+          throw status(500, "Failed to create passenger");
         });
       return status(204);
     },
@@ -615,8 +696,132 @@ const elysia = new Elysia({ prefix: "/api" })
         firstName: t.String(),
         lastName: t.String(),
         identification: t.String(),
-        ticket: t.String(),
         flight: t.String(),
+      }),
+    },
+  )
+  .put(
+    "/passengers",
+    async ({ user, body, status }) => {
+      if (!user) return status(401);
+      if (!(user.role === "airline" || user.role === "gate"))
+        return status(403);
+      const passenger = (
+        await db
+          .select()
+          .from(passengerTable)
+          .where(eq(passengerTable.id, body.id))
+          .catch(() => {
+            throw status(500, "Failed to fetch passenger");
+          })
+      )[0];
+      if (!passenger) return status(404);
+      if (!passenger.flight.includes(user.airline)) return status(403);
+
+      let remove = passenger.remove;
+      if (user.role === "airline" || user.role === "gate") {
+        remove = body.flag;
+      }
+
+      let newStatus;
+      if (user.role === "airline") {
+        newStatus = "checked-in";
+      } else if (user.role === "gate") {
+        newStatus = "boarded";
+      } else if (user.role === "ground") {
+        newStatus = passenger.status;
+      } else {
+        return status(403);
+      }
+
+      await db
+        .update(passengerTable)
+        .set({
+          status: remove ? passenger.status : (newStatus as Status),
+          remove,
+        })
+        .where(eq(passengerTable.id, body.id))
+        .catch(() => {
+          throw status(500, "Failed to update passenger");
+        });
+      return status(204);
+    },
+    {
+      body: t.Object({
+        id: t.Number(),
+        flag: t.Boolean(),
+      }),
+    },
+  )
+  .post(
+    "/bags",
+    async ({ user, body, status }) => {
+      if (!user) return status(401);
+      if (!(user.role === "airline" || user.role === "ground")) {
+        return status(403);
+      }
+      const id = Math.floor(100000 + Math.random() * 900000);
+      await db
+        .insert(bagTable)
+        .values({
+          id,
+          ticket: body.ticket,
+          location: {
+            type: "check-in",
+            terminal: body.terminal,
+            counter: body.counter,
+          } as BagLocation,
+        })
+        .catch((err) => {
+          if (err.cause.message.includes("violates foreign key constraint")) {
+            throw status(400, "Flight does not exist");
+          }
+          if (err.cause.message.includes("duplicate key value")) {
+            throw status(400, "Ticket number already exists");
+          }
+          console.log(err);
+          throw status(500, "Failed to create bag");
+        });
+      return status(204);
+    },
+    {
+      body: t.Object({
+        ticket: t.Number(),
+        terminal: t.String(),
+        counter: t.Number(),
+      }),
+    },
+  )
+  .get("/bags", async ({ user, status }) => {
+    if (!user) return status(401);
+    // TODO: Maybe make this per airline? I don't think it matters
+    const bags = await db
+      .select()
+      .from(bagTable)
+      .orderBy(bagTable.id)
+      .catch(() => {
+        throw status(500, "Failed to fetch bags");
+      });
+    return status(200, bags);
+  })
+  .delete(
+    "/bags",
+    async ({ user, body, status }) => {
+      if (!user) return status(401);
+      if (!(user.role === "airline")) {
+        return status(403);
+      }
+      await db
+        .delete(bagTable)
+        .where(eq(bagTable.ticket, body.ticket))
+        .catch(() => {
+          throw status(500, "Failed to delete bags");
+        });
+      return status(204);
+    },
+    {
+      body: t.Object({
+        ticket: t.Number(),
       }),
     },
   );

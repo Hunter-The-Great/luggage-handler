@@ -21,8 +21,16 @@ export const useFlights = () => {
   });
 
   const removeFlights = useMutation({
-    mutationFn: async (ids: number[]) =>
-      await client.api.admin.flights.delete({ ids }),
+    mutationFn: async (ids: number[]) => {
+      return new Promise<void>(async (resolve, reject) => {
+        const res = await client.api.admin.flights.delete({ ids });
+        if (res.error) {
+          reject(res.error.value);
+        } else {
+          resolve();
+        }
+      });
+    },
 
     onSuccess() {
       refetch();
@@ -30,10 +38,11 @@ export const useFlights = () => {
   });
 
   const addFlight = useMutation({
-    mutationFn: async (body: { flight: string }) => {
+    mutationFn: async (body: { flight: string; gate: string }) => {
       return new Promise<void>(async (resolve, reject) => {
         const res = await client.api.admin.flights.post({
           flight: body.flight,
+          gate: body.gate,
         });
         if (res.error) {
           reject(res.error.value);

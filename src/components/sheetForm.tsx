@@ -10,6 +10,7 @@ export const SheetForm = (props: {
   loading?: string | null;
   success?: string | null;
   error?: string | null;
+  cssDisabled?: boolean;
   handleSubmit: (...args: any) => Promise<void>;
   submitArgs?: Array<any>;
   children: ReactNode;
@@ -17,7 +18,13 @@ export const SheetForm = (props: {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger className="bg-blue-800 rounded-lg border border-blue-600/70 hover:border-blue-700/70 text-blue-50 hover:bg-blue-900/90 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800 hover:shadow dark:hover:shadow px-2">
+      <SheetTrigger
+        className={
+          props.cssDisabled
+            ? "text-sm text-left px-2 py-1 rounded-sm text-neutral-400/80 dark:hover:bg-neutral-700/60 w-full"
+            : "bg-blue-800 rounded-lg border border-blue-600/70 hover:border-blue-700/70 text-blue-50 hover:bg-blue-900/90 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800 hover:shadow dark:hover:shadow px-2"
+        }
+      >
         {props.label}
       </SheetTrigger>
       <SheetContent side="right">

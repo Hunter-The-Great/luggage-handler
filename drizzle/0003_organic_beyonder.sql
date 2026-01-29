@@ -1,0 +1,2 @@
+ALTER TABLE "bags" ADD CONSTRAINT "bags_ticket_passengers_ticket_fk" FOREIGN KEY ("ticket") REFERENCES "public"."passengers"("ticket") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "passengers" ADD CONSTRAINT "ticket_fk" FOREIGN KEY ("ticket") REFERENCES "public"."passengers"("ticket") ON DELETE no action ON UPDATE no action;

@@ -94,6 +94,8 @@ export const FlightPage = () => {
               />
             </TableCell>
             <TableCell>Flight Number</TableCell>
+            <TableCell>Gate Number</TableCell>
+            <TableCell>Number of Passengers</TableCell>
             <TableCell>Status</TableCell>
           </TableRow>
         </TableHeader>
@@ -110,6 +112,8 @@ export const FlightPage = () => {
                   />
                 </TableCell>
                 <TableCell>{flight.flight || "–"}</TableCell>
+                <TableCell>{flight.gate || "–"}</TableCell>
+                <TableCell>{flight.passengerCount}</TableCell>
                 <TableCell>
                   {flight.departed ? (
                     <p className="text-green-400">Departed</p>
@@ -129,6 +133,7 @@ export const FlightPage = () => {
 
 const AddFlightForm = () => {
   const [flight, setFlight] = useState("");
+  const [gate, setGate] = useState("");
   const { addFlight } = useFlights();
 
   const handleSubmit = async () => {
@@ -137,9 +142,11 @@ const AddFlightForm = () => {
         addFlight
           .mutateAsync({
             flight,
+            gate,
           })
           .then(() => {
             setFlight("");
+            setGate("");
             resolve();
           })
           .catch((err) => {
@@ -161,12 +168,19 @@ const AddFlightForm = () => {
       label="Add Flight"
       handleSubmit={handleSubmit}
     >
-      <Label>Airline</Label>
+      <Label>Flight Number</Label>
       <Input
         type="text"
         className="border rounded-lg"
         value={flight}
         onChange={(e) => setFlight(e.target.value)}
+      ></Input>
+      <Label>Gate</Label>
+      <Input
+        type="text"
+        className="border rounded-lg"
+        value={gate}
+        onChange={(e) => setGate(e.target.value)}
       ></Input>
     </SheetForm>
   );

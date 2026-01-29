@@ -21,6 +21,7 @@ import { Forbidden } from "./403";
 import { UsersPage } from "./UsersPage";
 import { FlightPage } from "./flightPage";
 import { PassengerPage } from "./PassengerPage";
+import { AirlinePage } from "./AirlinePage";
 
 const Redirect = () => {
   const { user } = useAuth();
@@ -34,7 +35,7 @@ const Redirect = () => {
 
 const RoleMap: Record<RoleType, ReactNode> = {
   admin: <AdminPage />,
-  airline: <div>airline</div>,
+  airline: <AirlinePage />,
   gate: <div>gate</div>,
   ground: <div>ground</div>,
 };

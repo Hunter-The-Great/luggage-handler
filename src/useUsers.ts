@@ -22,8 +22,16 @@ export const useUsers = () => {
   });
 
   const RemoveUsers = useMutation({
-    mutationFn: async (ids: number[]) =>
-      await client.api.admin.users.delete({ ids }),
+    mutationFn: async (ids: number[]) => {
+      return new Promise<void>(async (resolve, reject) => {
+        const res = await client.api.admin.users.delete({ ids });
+        if (res.error) {
+          reject(res.error.value);
+        } else {
+          resolve();
+        }
+      });
+    },
 
     onSuccess() {
       refetch();

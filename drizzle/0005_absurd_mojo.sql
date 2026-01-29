@@ -1,0 +1,1 @@
+ALTER TABLE "passengers" ALTER COLUMN "ticket" SET DATA TYPE bigint;

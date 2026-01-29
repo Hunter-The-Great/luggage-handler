@@ -1,0 +1,1 @@
+ALTER TABLE "flights" ADD COLUMN "gate" varchar(255) NOT NULL;

@@ -1,0 +1,3 @@
+ALTER TABLE "flights" ADD CONSTRAINT "flight_fk" FOREIGN KEY ("flight") REFERENCES "public"."flights"("flight") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "passengers" ADD CONSTRAINT "passengers_flight_flights_flight_fk" FOREIGN KEY ("flight") REFERENCES "public"."flights"("flight") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "flights" DROP COLUMN "tickets";

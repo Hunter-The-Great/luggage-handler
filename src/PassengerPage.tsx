@@ -15,6 +15,7 @@ import { Checkbox } from "./components/ui/checkbox";
 import { Button } from "./components/ui/button";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useAuth } from "./checkAuth";
+import type { Status } from "./db/schema";
 
 export const PassengerPage = () => {
   const { user } = useAuth();
@@ -58,9 +59,14 @@ export const PassengerPage = () => {
         label: "Delete",
         onClick: async () => {
           toast.promise(
-            removePassengers.mutateAsync(Array.from(selected)).then(() => {
-              setSelected(new Set());
-            }),
+            removePassengers
+              .mutateAsync(Array.from(selected))
+              .then(() => {
+                setSelected(new Set());
+              })
+              .catch((err) => {
+                throw new Error(err);
+              }),
             {
               position: "top-center",
               loading: "Removing Passengers...",
@@ -75,6 +81,19 @@ export const PassengerPage = () => {
         onClick: () => {},
       },
     });
+  };
+
+  const parseStatus = (status: Status) => {
+    switch (status) {
+      case "not-checked-in":
+        return <p className="text-amber-300">Not checked in</p>;
+      case "checked-in":
+        return <p className="text-blue-600">Checked in</p>;
+      case "boarded":
+        return <p className="text-green-500">Boarded</p>;
+      default:
+        return "–";
+    }
   };
 
   return (
@@ -136,7 +155,7 @@ export const PassengerPage = () => {
                       Flagged for removal
                     </p>
                   ) : (
-                    passenger.status || "–"
+                    parseStatus(passenger.status)
                   )}
                 </TableCell>
               </TableRow>
@@ -153,7 +172,6 @@ const AddPassengerForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [identification, setIdentification] = useState("");
-  const [ticket, setTicket] = useState("");
   const [flight, setFlight] = useState("");
   const { user } = useAuth();
   const { addPassenger } = usePassengers(
@@ -168,7 +186,6 @@ const AddPassengerForm = () => {
             firstName,
             lastName,
             identification: identification,
-            ticket: ticket,
             flight,
           })
           .then(() => {
@@ -176,7 +193,6 @@ const AddPassengerForm = () => {
             setFirstName("");
             setLastName("");
             setIdentification("");
-            setTicket("");
             resolve();
           })
           .catch((err) => {
@@ -192,6 +208,8 @@ const AddPassengerForm = () => {
     });
   };
 
+  // TODO: make flight number a dropdown menu?
+  // maybe this: https://ui.shadcn.com/docs/components/radix/combobox
   return (
     <SheetForm
       title="Add a Passenger"
@@ -226,14 +244,6 @@ const AddPassengerForm = () => {
         placeholder="000000"
         value={identification || ""}
         onChange={(e) => setIdentification(e.target.value)}
-      ></Input>
-      <div className="flex h-2" />
-      <Label>Ticket Number</Label>
-      <Input
-        type="text"
-        className="border rounded-lg"
-        value={ticket}
-        onChange={(e) => setTicket(e.target.value)}
       ></Input>
       <div className="flex h-2" />
       <Label>Flight Number</Label>
