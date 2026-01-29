@@ -22,6 +22,7 @@ import { UsersPage } from "./UsersPage";
 import { FlightPage } from "./flightPage";
 import { PassengerPage } from "./PassengerPage";
 import { AirlinePage } from "./AirlinePage";
+import { GatePage } from "./GatePage";
 
 const Redirect = () => {
   const { user } = useAuth();
@@ -36,7 +37,7 @@ const Redirect = () => {
 const RoleMap: Record<RoleType, ReactNode> = {
   admin: <AdminPage />,
   airline: <AirlinePage />,
-  gate: <div>gate</div>,
+  gate: <GatePage />,
   ground: <div>ground</div>,
 };
 
@@ -85,7 +86,7 @@ function start() {
                   <Route path="/passengers" element={<PassengerPage />} />
                 </Route>
                 <Route element={<RoleCheck roles={["gate"]} />}>
-                  <Route path="/flights/:id" element={<FlightPage />} />
+                  <Route path="/flights/:id" element={<div> dog div</div>} />
                 </Route>
               </Route>
               <Route path="/login" element={<LoginForm />} />
