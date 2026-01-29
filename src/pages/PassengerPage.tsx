@@ -1,21 +1,21 @@
 import { useState } from "react";
-import { Input } from "./components/ui/input";
-import { Label } from "./components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { SheetForm } from "./components/sheetForm";
-import { usePassengers } from "./usePassengers";
+import { SheetForm } from "@/components/sheetForm";
+import { usePassengers } from "@/queries/usePassengers";
 import {
   Table,
   TableBody,
   TableCell,
   TableHeader,
   TableRow,
-} from "./components/ui/table";
-import { Checkbox } from "./components/ui/checkbox";
-import { Button } from "./components/ui/button";
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useAuth } from "./checkAuth";
-import type { Status } from "./db/schema";
+import { useAuth } from "@/queries/checkAuth";
+import type { Status } from "@/db/schema";
 
 export const PassengerPage = () => {
   const { user } = useAuth();

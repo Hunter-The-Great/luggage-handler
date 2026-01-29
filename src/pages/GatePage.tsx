@@ -1,30 +1,30 @@
 import { MoreHorizontalIcon } from "lucide-react";
-import { useAuth } from "./checkAuth";
-import { Button } from "./components/ui/button";
+import { useAuth } from "@/queries/checkAuth";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
   TableCell,
   TableHeader,
   TableRow,
-} from "./components/ui/table";
-import type { Status } from "./db/schema";
-import { usePassengers } from "./usePassengers";
+} from "@/components/ui/table";
+import type { Status } from "@/db/schema";
+import { usePassengers } from "@/queries/usePassengers";
 import { toast } from "sonner";
-import { useBags } from "./useBags";
+import { useBags } from "@/queries/useBags";
 import { useState } from "react";
-import { SheetForm } from "./components/sheetForm";
-import { Label } from "./components/ui/label";
-import { Input } from "./components/ui/input";
-import { useFlights } from "./useFlights";
-import { Separator } from "./components/ui/separator";
+import { SheetForm } from "@/components/sheetForm";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { useFlights } from "@/queries/useFlights";
+import { Separator } from "@/components/ui/separator";
 
 const parseStatus = (status: Status) => {
   switch (status) {

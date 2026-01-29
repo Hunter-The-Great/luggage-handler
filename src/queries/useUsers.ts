@@ -1,6 +1,6 @@
-import { client } from "./client";
+import { client } from "@/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type { RoleType } from "./db/schema";
+import type { RoleType } from "@/db/schema";
 
 const getUsers = async () => {
   const loaded = await client.api.admin.users.get();

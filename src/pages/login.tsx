@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useAuth } from "./checkAuth";
+import { useAuth } from "@/queries/checkAuth";
 import { useNavigate } from "react-router";
-import { Form } from "./components/form";
-import { Input } from "./components/ui/input";
-import { Label } from "./components/ui/label";
+import { Form } from "@/components/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 export const LoginForm = () => {

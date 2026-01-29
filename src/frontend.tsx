@@ -5,24 +5,25 @@
  * It is included in `src/index.html`.
  */
 
+import "./index.css";
 import { createRoot } from "react-dom/client";
-import { AdminPage } from "./AdminPage";
+import { AdminPage } from "./pages/AdminPage";
 import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router";
-import { AuthProvider, useAuth } from "./checkAuth";
-import { LoginForm } from "./login";
+import { AuthProvider, useAuth } from "./queries/checkAuth";
+import { LoginForm } from "./pages/login";
 import { type RoleType } from "./db/schema";
 import type { ReactNode } from "react";
-import { PasswordForm } from "./passwordForm";
+import { PasswordForm } from "./pages/passwordForm";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TopBar } from "./topBar";
 import { Toaster } from "sonner";
-import { NotFound } from "./404";
-import { Forbidden } from "./403";
-import { UsersPage } from "./UsersPage";
-import { FlightPage } from "./flightPage";
-import { PassengerPage } from "./PassengerPage";
-import { AirlinePage } from "./AirlinePage";
-import { GatePage } from "./GatePage";
+import { NotFound } from "./pages/404";
+import { Forbidden } from "./pages/403";
+import { UsersPage } from "./pages/UsersPage";
+import { FlightPage } from "./pages/flightPage";
+import { PassengerPage } from "./pages/PassengerPage";
+import { AirlinePage } from "./pages/AirlinePage";
+import { GatePage } from "./pages/GatePage";
 
 const Redirect = () => {
   const { user } = useAuth();

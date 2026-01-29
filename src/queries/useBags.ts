@@ -1,4 +1,4 @@
-import { client } from "./client";
+import { client } from "@/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const getBags = async () => {

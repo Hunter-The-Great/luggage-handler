@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { useLocalStorage } from "@uidotdev/usehooks";
-import { client } from "./client";
-import type { RoleType } from "./db/schema";
+import { client } from "@/client";
+import type { RoleType } from "@/db/schema";
 
 type Auth = {
   user: any;

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useAuth } from "./checkAuth";
-import { client } from "./client";
-import { Input } from "./components/ui/input";
-import { Form } from "./components/form";
-import { Label } from "./components/ui/label";
+import { useAuth } from "@/queries/checkAuth";
+import { client } from "@/client";
+import { Input } from "@/components/ui/input";
+import { Form } from "@/components/form";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 export const PasswordForm = () => {

@@ -1,24 +1,24 @@
 import { useState } from "react";
-import type { RoleType } from "./db/schema";
-import { roles } from "./db/schema";
-import { Input } from "./components/ui/input";
-import { Label } from "./components/ui/label";
+import type { RoleType } from "@/db/schema";
+import { roles } from "@/db/schema";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   NativeSelect,
   NativeSelectOption,
-} from "./components/ui/native-select";
-import { SheetForm } from "./components/sheetForm";
-import { useUsers } from "./useUsers";
+} from "@/components/ui/native-select";
+import { SheetForm } from "@/components/sheetForm";
+import { useUsers } from "@/queries/useUsers";
 import {
   Table,
   TableBody,
   TableCell,
   TableHeader,
   TableRow,
-} from "./components/ui/table";
-import { Checkbox } from "./components/ui/checkbox";
-import { Button } from "./components/ui/button";
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 export const UsersPage = () => {

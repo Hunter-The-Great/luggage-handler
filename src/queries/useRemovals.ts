@@ -1,5 +1,5 @@
-import { client } from "./client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { client } from "@/client";
+import { useQuery } from "@tanstack/react-query";
 
 const getRemovals = async () => {
   const loaded = await client.api.admin.removals.get();

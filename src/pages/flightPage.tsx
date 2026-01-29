@@ -1,18 +1,18 @@
 import { useState } from "react";
-import { Input } from "./components/ui/input";
-import { Label } from "./components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { SheetForm } from "./components/sheetForm";
-import { useFlights } from "./useFlights";
+import { SheetForm } from "@/components/sheetForm";
+import { useFlights } from "@/queries/useFlights";
 import {
   Table,
   TableBody,
   TableCell,
   TableHeader,
   TableRow,
-} from "./components/ui/table";
-import { Checkbox } from "./components/ui/checkbox";
-import { Button } from "./components/ui/button";
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 export const FlightPage = () => {

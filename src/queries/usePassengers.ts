@@ -1,4 +1,4 @@
-import { client } from "./client";
+import { client } from "@/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 const getPassengers = async (airline: string) => {

@@ -1,9 +1,8 @@
-import "./index.css";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useNavigate } from "react-router";
-import { Button } from "./components/ui/button";
-import { useRemovals } from "./useRemovals";
-import { Separator } from "./components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { useRemovals } from "@/queries/useRemovals";
 
 const Removals = () => {
   const { removals } = useRemovals();

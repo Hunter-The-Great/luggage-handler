@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router";
-import { useAuth } from "./checkAuth";
+import { useAuth } from "./queries/checkAuth";
 
 export const TopBar = () => {
   const navigate = useNavigate();
