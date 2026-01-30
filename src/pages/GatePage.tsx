@@ -1,105 +1,14 @@
-import { MoreHorizontalIcon } from "lucide-react";
 import { useAuth } from "@/queries/checkAuth";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type { Status } from "@/db/schema";
-import { usePassengers } from "@/queries/usePassengers";
-import { toast } from "sonner";
-import { useBags } from "@/queries/useBags";
-import { useState } from "react";
-import { SheetForm } from "@/components/sheetForm";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useFlights } from "@/queries/useFlights";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router";
 
-const parseStatus = (status: Status) => {
-  switch (status) {
-    case "not-checked-in":
-      return <p className="text-amber-300">Not checked in</p>;
-    case "checked-in":
-      return <p className="text-blue-600">Checked in</p>;
-    case "boarded":
-      return <p className="text-green-500">Boarded</p>;
-    default:
-      return "–";
-  }
-};
-
 export const GatePage = () => {
   const { user } = useAuth();
   if (!user.airline) return <div>Invalid airline</div>;
-  const { passengers, updateStatus } = usePassengers(null);
-  const { removeBags } = useBags();
   const { flights } = useFlights();
   const navigate = useNavigate();
-
-  const checkIn = (id: number) => {
-    toast.promise(
-      updateStatus.mutateAsync({ id }).catch((err) => {
-        throw new Error(err);
-      }),
-      {
-        position: "top-center",
-        loading: "Checking in passenger...",
-        success: "Passenger checked in successfully",
-        error: "Failed to check in passenger",
-      },
-    );
-  };
-
-  const flag = async (id: number) => {
-    toast.promise(
-      updateStatus.mutateAsync({ id, flag: true }).catch((err) => {
-        throw new Error(err);
-      }),
-      {
-        position: "top-center",
-        loading: "Flagging passenger for removal...",
-        success: "Passenger flagged successfully",
-        error: "Failed to flag passenger",
-      },
-    );
-  };
-
-  const handleRemoveBags = async (ticket: number) => {
-    toast.warning(
-      "Are you sure you want to remove all bags from this passenger?",
-      {
-        position: "top-center",
-        duration: Infinity,
-        action: {
-          label: "Remove",
-          onClick: async () => {
-            toast.promise(removeBags.mutateAsync(ticket), {
-              position: "top-center",
-              loading: "Removing bags...",
-              success: "Bags removed successfully",
-              error: "Failed to remove bags",
-            });
-          },
-        },
-        cancel: {
-          label: "Cancel",
-          onClick: () => {},
-        },
-      },
-    );
-  };
 
   return (
     <div className="flex flex-row justify-center pt-10">
@@ -111,7 +20,7 @@ export const GatePage = () => {
             return (
               <Button
                 onClick={() => navigate(`/flights/${flight.flight}`)}
-                className="w-full"
+                className={`w-full ${flight.departed ? "dark:bg-green-500/80 dark:border-green-400/80 dark:hover:bg-green-600/80 dark:hover:border-green-500/80" : ""}`}
                 variant={"large"}
               >
                 {flight.flight}
@@ -121,63 +30,5 @@ export const GatePage = () => {
         </div>
       </div>
     </div>
-  );
-};
-
-const AddBagForm = (props: { ticket: number }) => {
-  const { addBag } = useBags();
-  const [terminal, setTerminal] = useState("");
-  const [counter, setCounter] = useState("");
-
-  const handleSubmit = async (ticket: number) => {
-    return new Promise<void>(async (resolve) => {
-      toast.promise(
-        addBag
-          .mutateAsync({
-            terminal,
-            counter,
-            ticket,
-          })
-          .then(() => {
-            setTerminal("");
-            setCounter("");
-            resolve();
-          })
-          .catch((err) => {
-            throw new Error(err);
-          }),
-        {
-          position: "top-center",
-          loading: "Adding bag...",
-          success: "Bag added successfully",
-          error: (err) => err.message || "Failed to add bag",
-        },
-      );
-    });
-  };
-
-  return (
-    <SheetForm
-      title="Add a Bag"
-      label="Add Bag"
-      cssDisabled={true}
-      handleSubmit={handleSubmit}
-      submitArgs={[props.ticket]}
-    >
-      <Label>Terminal</Label>
-      <Input
-        type="text"
-        className="border rounded-lg"
-        value={terminal}
-        onChange={(e) => setTerminal(e.target.value)}
-      ></Input>
-      <Label>Counter</Label>
-      <Input
-        type="text"
-        className="border rounded-lg"
-        value={counter}
-        onChange={(e) => setCounter(e.target.value)}
-      ></Input>
-    </SheetForm>
   );
 };

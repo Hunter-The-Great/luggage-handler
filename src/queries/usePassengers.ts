@@ -1,5 +1,4 @@
 import { client } from "@/client";
-import type { Status } from "@/db/schema";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 const getPassengers = async (flight: string | null) => {
@@ -69,15 +68,7 @@ export const usePassengers = (flight: string | null) => {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({
-      id,
-      status,
-      flag,
-    }: {
-      id: number;
-      status?: Status;
-      flag?: boolean;
-    }) => {
+    mutationFn: async ({ id, flag }: { id: number; flag?: boolean }) => {
       return new Promise<void>(async (resolve, reject) => {
         const res = await client.api.passengers.put({
           id,

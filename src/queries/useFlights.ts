@@ -57,10 +57,28 @@ export const useFlights = () => {
     },
   });
 
+  const departFlight = useMutation({
+    mutationFn: async (flight: string) => {
+      return new Promise<void>(async (resolve, reject) => {
+        const res = await client.api.flights({ flight }).put();
+        if (res.error) {
+          reject(res.error.value);
+        } else {
+          resolve();
+        }
+      });
+    },
+
+    onSuccess() {
+      refetch();
+    },
+  });
+
   return {
     flights,
     removeFlights,
     addFlight,
+    departFlight,
     isLoading: isFetching,
   };
 };

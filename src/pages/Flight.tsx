@@ -16,7 +16,7 @@ import { useBags } from "@/queries/useBags";
 
 export const Flight = () => {
   const { id } = useParams();
-  const { flights } = useFlights();
+  const { flights, departFlight } = useFlights();
   const { passengers, updateStatus } = usePassengers(id!);
   const { bags } = useBags();
 
@@ -25,6 +25,14 @@ export const Flight = () => {
       (bag) => bag.ticket === ticket && bag.location.type !== "gate",
     );
     if (absentBags.length !== 0) return false;
+    return true;
+  };
+
+  const checkPassengers = (): boolean => {
+    const absentPassengers = passengers.filter(
+      (passenger) => passenger.status !== "boarded",
+    );
+    if (absentPassengers.length !== 0) return false;
     return true;
   };
 
@@ -60,8 +68,41 @@ export const Flight = () => {
     );
   };
 
+  const depart = () => {
+    toast.promise(
+      departFlight.mutateAsync(id!).catch((err) => {
+        throw new Error(err);
+      }),
+      {
+        position: "top-center",
+        loading: "Departing flight...",
+        success: "Flight departed successfully",
+        error: "Failed to depart flight",
+      },
+    );
+  };
+
+  const DepartButton = () => {
+    if (flight.departed) {
+      return (
+        <p className="text-lg font-bold text-green-500">Flight Departed</p>
+      );
+    } else {
+      return (
+        <Button
+          variant={"primary"}
+          onClick={depart}
+          disabled={!checkPassengers()}
+        >
+          Ready for Departure
+        </Button>
+      );
+    }
+  };
+
   return (
-    <div className="flex flex-col justify-center items-center p-6">
+    <div className="flex flex-col justify-center gap-4 items-center p-6">
+      <DepartButton />
       <Table>
         <TableHeader>
           <TableRow>
@@ -76,6 +117,7 @@ export const Flight = () => {
         </TableHeader>
         <TableBody>
           {passengers.map((passenger) => {
+            const bags = checkBags(passenger.ticket);
             return (
               <TableRow
                 className={
@@ -90,10 +132,10 @@ export const Flight = () => {
                 <TableCell>{passenger.identification || "–"}</TableCell>
                 <TableCell>{passenger.ticket || "–"}</TableCell>
                 <TableCell>
-                  {checkBags(passenger.ticket) ? (
-                    <p className="text-green-500">yes</p>
+                  {bags ? (
+                    <p className="text-green-500">Yes</p>
                   ) : (
-                    <p className="text-red-500">no</p>
+                    <p className="text-red-500">No</p>
                   )}
                 </TableCell>
                 <TableCell>
@@ -111,7 +153,10 @@ export const Flight = () => {
                     className="w-full"
                     onClick={() => board(passenger.id)}
                     disabled={
-                      passenger.status !== "checked-in" || passenger.remove // TODO: add check for all bags
+                      passenger.status !== "checked-in" ||
+                      passenger.remove ||
+                      !bags ||
+                      flight.departed
                     }
                   >
                     Board

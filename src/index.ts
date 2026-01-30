@@ -685,10 +685,10 @@ const elysia = new Elysia({ prefix: "/api" })
         })
         .catch((err) => {
           if (err.cause.message.includes("violates foreign key constraint")) {
-            throw status(400, "Flight does not exist");
+            throw status(400, "Passenger does not exist");
           }
           if (err.cause.message.includes("duplicate key value")) {
-            throw status(400, "Ticket number already exists");
+            throw status(400, "Id already exists");
           }
           console.log(err);
           throw status(500, "Failed to create bag");
@@ -791,8 +791,22 @@ const elysia = new Elysia({ prefix: "/api" })
     } else {
       return status(403);
     }
-
     return status(200, flights);
+  })
+  .put("/flights/:flight", async ({ user, params, status }) => {
+    if (!user) return status(401);
+    if (!(user.role === "gate")) {
+      return status(403);
+    }
+    const flight = params.flight.toUpperCase();
+    await db
+      .update(flightTable)
+      .set({ departed: true })
+      .where(eq(flightTable.flight, flight))
+      .catch(() => {
+        throw status(500, "Failed to update flight");
+      });
+    return status(204);
   });
 
 const server = Bun.serve({
