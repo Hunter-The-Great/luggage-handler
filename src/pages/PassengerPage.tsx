@@ -14,14 +14,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useAuth } from "@/queries/checkAuth";
 import type { Status } from "@/db/schema";
 
 export const PassengerPage = () => {
-  const { user } = useAuth();
-  const { passengers, removePassengers } = usePassengers(
-    user.role === "admin" ? "" : user.airline,
-  );
+  const { passengers, removePassengers } = usePassengers(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const selectAll =
@@ -173,10 +169,7 @@ const AddPassengerForm = () => {
   const [lastName, setLastName] = useState("");
   const [identification, setIdentification] = useState("");
   const [flight, setFlight] = useState("");
-  const { user } = useAuth();
-  const { addPassenger } = usePassengers(
-    user.role === "admin" ? "" : user.airline,
-  );
+  const { addPassenger } = usePassengers(null);
 
   const handleSubmit = async () => {
     return new Promise<void>(async (resolve) => {

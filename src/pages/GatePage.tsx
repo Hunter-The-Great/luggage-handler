@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useFlights } from "@/queries/useFlights";
 import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "react-router";
 
 const parseStatus = (status: Status) => {
   switch (status) {
@@ -42,9 +43,10 @@ const parseStatus = (status: Status) => {
 export const GatePage = () => {
   const { user } = useAuth();
   if (!user.airline) return <div>Invalid airline</div>;
-  const { passengers, updateStatus } = usePassengers(user.airline);
+  const { passengers, updateStatus } = usePassengers(null);
   const { removeBags } = useBags();
   const { flights } = useFlights();
+  const navigate = useNavigate();
 
   const checkIn = (id: number) => {
     toast.promise(
@@ -107,7 +109,11 @@ export const GatePage = () => {
         <div className="grid grid-cols-2 gap-4 w-full">
           {flights.map((flight) => {
             return (
-              <Button className="w-full" variant={"large"}>
+              <Button
+                onClick={() => navigate(`/flights/${flight.flight}`)}
+                className="w-full"
+                variant={"large"}
+              >
                 {flight.flight}
               </Button>
             );

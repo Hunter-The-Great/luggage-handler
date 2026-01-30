@@ -1,8 +1,12 @@
 import { client } from "@/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const getBags = async () => {
-  const loaded = await client.api.bags.get();
+const getBags = async (ticket?: string) => {
+  const loaded = await client.api.bags.get({
+    query: {
+      ticket: ticket || "",
+    },
+  });
   if (loaded.error) {
     console.log(loaded.error.value);
     throw new Error("Failed to load bags");
@@ -10,7 +14,7 @@ const getBags = async () => {
   return loaded.data;
 };
 
-export const useBags = () => {
+export const useBags = (ticket?: string) => {
   const queryClient = useQueryClient();
 
   const {
@@ -19,7 +23,7 @@ export const useBags = () => {
     refetch,
   } = useQuery({
     queryKey: ["bags"],
-    queryFn: () => getBags(),
+    queryFn: () => getBags(ticket || ""),
     initialData: [],
   });
 

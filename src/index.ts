@@ -11,7 +11,7 @@ import {
   usersTable,
 } from "./db/schema";
 import type { BagLocation, Status } from "./db/schema";
-import { count, eq, ilike, inArray } from "drizzle-orm";
+import { and, count, eq, ilike, inArray, sql } from "drizzle-orm";
 import { env } from "./lib/env";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { generatePassword } from "./lib/password";
@@ -491,37 +491,17 @@ const elysia = new Elysia({ prefix: "/api" })
     "/passengers",
     async ({ user, status, query }) => {
       if (!user) return status(401);
-      if (user.role === "airline" || user.role === "gate") {
-        if (
-          !query.airline ||
-          query.airline?.toLowerCase() !== user.airline.toLowerCase()
-        ) {
-          return status(403);
+      const airline =
+        user.role === "airline" || user.role === "gate" ? user.airline : null;
+      const parseQuery = () => {
+        if (query.flight && query.flight !== "") {
+          return eq(passengerTable.flight, query.flight);
+        } else if (airline) {
+          return ilike(passengerTable.flight, `${airline}%`);
+        } else {
+          return sql`true`;
         }
-      }
-      if (query.airline !== "") {
-        const passengers = await db
-          .select({
-            id: passengerTable.id,
-            firstName: passengerTable.firstName,
-            lastName: passengerTable.lastName,
-            identification: passengerTable.identification,
-            ticket: passengerTable.ticket,
-            flight: passengerTable.flight,
-            status: passengerTable.status,
-            remove: passengerTable.remove,
-            bags: count(bagTable.id),
-          })
-          .from(passengerTable)
-          .where(ilike(passengerTable.flight, `${query.airline}%`))
-          .leftJoin(bagTable, eq(passengerTable.ticket, bagTable.ticket))
-          .groupBy(passengerTable.id)
-          .orderBy(passengerTable.flight)
-          .catch(() => {
-            throw status(500, "Failed to fetch passengers");
-          });
-        return status(200, passengers);
-      }
+      };
       const passengers = await db
         .select({
           id: passengerTable.id,
@@ -535,17 +515,19 @@ const elysia = new Elysia({ prefix: "/api" })
           bags: count(bagTable.id),
         })
         .from(passengerTable)
+        .where(parseQuery())
         .leftJoin(bagTable, eq(passengerTable.ticket, bagTable.ticket))
         .groupBy(passengerTable.id)
         .orderBy(passengerTable.flight)
-        .catch(() => {
+        .catch((err) => {
+          console.log(err);
           throw status(500, "Failed to fetch passengers");
         });
       return status(200, passengers);
     },
     {
       query: t.Object({
-        airline: t.String(),
+        flight: t.Nullable(t.String()),
       }),
     },
   )
@@ -721,18 +703,33 @@ const elysia = new Elysia({ prefix: "/api" })
       }),
     },
   )
-  .get("/bags", async ({ user, status }) => {
-    if (!user) return status(401);
-    // TODO: Maybe make this per airline? I don't think it matters
-    const bags = await db
-      .select()
-      .from(bagTable)
-      .orderBy(bagTable.id)
-      .catch(() => {
-        throw status(500, "Failed to fetch bags");
-      });
-    return status(200, bags);
-  })
+  .get(
+    "/bags",
+    async ({ user, query, status }) => {
+      if (!user) return status(401);
+      const parseQuery = () => {
+        if (query.ticket && query.ticket !== "") {
+          return eq(bagTable.ticket, parseInt(query.ticket));
+        } else {
+          return sql`true`;
+        }
+      };
+      const bags = await db
+        .select()
+        .from(bagTable)
+        .where(parseQuery())
+        .orderBy(bagTable.id)
+        .catch(() => {
+          throw status(500, "Failed to fetch bags");
+        });
+      return status(200, bags);
+    },
+    {
+      query: t.Object({
+        ticket: t.String(),
+      }),
+    },
+  )
   .delete(
     "/bags",
     async ({ user, body, status }) => {

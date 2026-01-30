@@ -40,12 +40,12 @@ const parseStatus = (status: Status) => {
 export const AirlinePage = () => {
   const { user } = useAuth();
   if (!user.airline) return <div>Invalid airline</div>;
-  const { passengers, updateStatus } = usePassengers(user.airline);
+  const { passengers, updateStatus } = usePassengers(null);
   const { removeBags } = useBags();
 
   const checkIn = (id: number) => {
     toast.promise(
-      updateStatus.mutateAsync({ id }).catch((err) => {
+      updateStatus.mutateAsync({ id, status: "checked-in" }).catch((err) => {
         throw new Error(err);
       }),
       {
