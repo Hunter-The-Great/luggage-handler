@@ -9,7 +9,7 @@ const getPassengers = async (flight: string | null) => {
     console.log(loaded.error.value);
     throw new Error("Failed to load passengers");
   }
-  return loaded.data;
+  return loaded.data.sort((a, b) => a.flight.localeCompare(b.flight));
 };
 
 export const usePassengers = (flight: string | null) => {

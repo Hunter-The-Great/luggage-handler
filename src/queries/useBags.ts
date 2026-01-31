@@ -1,10 +1,11 @@
 import { client } from "@/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const getBags = async (ticket?: string) => {
+const getBags = async (flight?: string, ticket?: string) => {
   const loaded = await client.api.bags.get({
     query: {
       ticket: ticket || "",
+      flight: flight || "",
     },
   });
   if (loaded.error) {
@@ -14,7 +15,13 @@ const getBags = async (ticket?: string) => {
   return loaded.data;
 };
 
-export const useBags = (ticket?: string) => {
+export const useBags = ({
+  flight,
+  ticket,
+}: {
+  flight?: string;
+  ticket?: string;
+}) => {
   const queryClient = useQueryClient();
 
   const {
@@ -23,7 +30,7 @@ export const useBags = (ticket?: string) => {
     refetch,
   } = useQuery({
     queryKey: ["bags"],
-    queryFn: () => getBags(ticket || ""),
+    queryFn: () => getBags(flight || "", ticket || ""),
     initialData: [],
   });
 
@@ -76,11 +83,11 @@ export const useBags = (ticket?: string) => {
   });
 
   const updateLocation = useMutation({
-    mutationFn: async ({ id, flag }: { id: number; flag?: boolean }) => {
+    mutationFn: async ({ id, flight }: { id: number; flight: string }) => {
       return new Promise<void>(async (resolve, reject) => {
         const res = await client.api.bags.put({
           id,
-          flag: flag || false,
+          flight,
         });
         if (res.error) {
           reject(res.error.value);

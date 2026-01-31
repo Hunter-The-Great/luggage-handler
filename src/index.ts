@@ -615,8 +615,6 @@ const elysia = new Elysia({ prefix: "/api" })
     "/passengers",
     async ({ user, body, status }) => {
       if (!user) return status(401);
-      if (!(user.role === "airline" || user.role === "gate"))
-        return status(403);
       const passenger = (
         await db
           .select()
@@ -629,11 +627,6 @@ const elysia = new Elysia({ prefix: "/api" })
       if (!passenger) return status(404);
       if (!passenger.flight.includes(user.airline)) return status(403);
 
-      let remove = passenger.remove;
-      if (user.role === "airline" || user.role === "gate") {
-        remove = body.flag;
-      }
-
       let newStatus;
       if (user.role === "airline") {
         newStatus = "checked-in";
@@ -644,6 +637,8 @@ const elysia = new Elysia({ prefix: "/api" })
       } else {
         return status(403);
       }
+
+      const remove = body.flag ? body.flag : passenger.remove;
 
       await db
         .update(passengerTable)
@@ -707,9 +702,19 @@ const elysia = new Elysia({ prefix: "/api" })
     "/bags",
     async ({ user, query, status }) => {
       if (!user) return status(401);
-      const parseQuery = () => {
+      const parseQuery = async () => {
         if (query.ticket && query.ticket !== "") {
           return eq(bagTable.ticket, parseInt(query.ticket));
+        } else if (query.flight && query.flight !== "") {
+          const passengers = await db
+            .select()
+            .from(passengerTable)
+            .where(eq(passengerTable.flight, query.flight))
+            .catch(() => {
+              throw status(500, "Failed to fetch passengers");
+            });
+          const tickets = passengers.map((passenger) => passenger.ticket);
+          return inArray(bagTable.ticket, tickets);
         } else {
           return sql`true`;
         }
@@ -717,7 +722,7 @@ const elysia = new Elysia({ prefix: "/api" })
       const bags = await db
         .select()
         .from(bagTable)
-        .where(parseQuery())
+        .where(await parseQuery())
         .orderBy(bagTable.id)
         .catch(() => {
           throw status(500, "Failed to fetch bags");
@@ -727,6 +732,7 @@ const elysia = new Elysia({ prefix: "/api" })
     {
       query: t.Object({
         ticket: t.String(),
+        flight: t.String(),
       }),
     },
   )
@@ -768,11 +774,11 @@ const elysia = new Elysia({ prefix: "/api" })
         .where(ilike(flightTable.flight, `${user.airline}%`))
         .leftJoin(passengerTable, eq(flightTable.flight, passengerTable.flight))
         .groupBy(flightTable.id)
-        .orderBy(flightTable.id)
+        .orderBy(flightTable.flight)
         .catch(() => {
           throw status(500, "Failed to fetch flights");
         });
-    } else if (user.role === "admin") {
+    } else if (user.role === "admin" || user.role === "ground") {
       flights = await db
         .select({
           id: flightTable.id,
@@ -807,7 +813,30 @@ const elysia = new Elysia({ prefix: "/api" })
         throw status(500, "Failed to update flight");
       });
     return status(204);
-  });
+  })
+  .put(
+    "/bags",
+    async ({ user, body, status }) => {
+      if (!user) return status(401);
+      if (!(user.role === "ground")) {
+        return status(403);
+      }
+      await db
+        .update(bagTable)
+        .set({ location: { type: "loaded", flight: body.flight } })
+        .where(eq(bagTable.id, body.id))
+        .catch(() => {
+          throw status(500, "Failed to update bag");
+        });
+      return status(204);
+    },
+    {
+      body: t.Object({
+        id: t.Number(),
+        flight: t.String(),
+      }),
+    },
+  );
 
 const server = Bun.serve({
   port: 3000,

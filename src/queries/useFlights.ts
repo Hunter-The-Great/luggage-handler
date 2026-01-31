@@ -6,7 +6,7 @@ const getFlights = async () => {
   if (loaded.error) {
     throw new Error("Failed to load flights");
   }
-  return loaded.data;
+  return loaded.data.sort((a, b) => a.flight.localeCompare(b.flight));
 };
 
 export const useFlights = () => {

@@ -18,7 +18,7 @@ export const Flight = () => {
   const { id } = useParams();
   const { flights, departFlight } = useFlights();
   const { passengers, updateStatus } = usePassengers(id!);
-  const { bags } = useBags();
+  const { bags } = useBags({});
 
   const checkBags = (ticket: number): boolean => {
     const absentBags = bags.filter(
@@ -56,7 +56,7 @@ export const Flight = () => {
 
   const board = (id: number) => {
     toast.promise(
-      updateStatus.mutateAsync({ id, status: "boarded" }).catch((err) => {
+      updateStatus.mutateAsync({ id }).catch((err) => {
         throw new Error(err);
       }),
       {

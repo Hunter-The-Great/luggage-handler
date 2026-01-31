@@ -12,7 +12,7 @@ import { BrowserRouter, Route, Routes, Navigate, Outlet } from "react-router";
 import { AuthProvider, useAuth } from "./queries/checkAuth";
 import { LoginForm } from "./pages/login";
 import { type RoleType } from "./db/schema";
-import type { ReactNode } from "react";
+import { useContext, type ReactNode } from "react";
 import { PasswordForm } from "./pages/passwordForm";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TopBar } from "./topBar";
@@ -25,6 +25,7 @@ import { PassengerPage } from "./pages/PassengerPage";
 import { AirlinePage } from "./pages/AirlinePage";
 import { GatePage } from "./pages/GatePage";
 import { Flight } from "./pages/Flight";
+import { GroundFlight } from "./pages/GroundFlight";
 
 const Redirect = () => {
   const { user } = useAuth();
@@ -40,7 +41,7 @@ const RoleMap: Record<RoleType, ReactNode> = {
   admin: <AdminPage />,
   airline: <AirlinePage />,
   gate: <GatePage />,
-  ground: <div>ground</div>,
+  ground: <GatePage />,
 };
 
 const LoginCheck = () => {
@@ -59,10 +60,13 @@ const RoleCheck = (props: { roles: RoleType[] }) => {
   return <Forbidden />;
 };
 
+const FlightRedirect = () => {
+  const { user } = useAuth();
+  return user.role === "gate" ? <Flight /> : <GroundFlight />;
+};
+
 const queryClient = new QueryClient();
 
-// TODO: redirect functions for /flights, /passengers, etc. pages
-// maybe make that ^ one generalized function?
 function start() {
   const root = createRoot(document.getElementById("root")!);
   root.render(
@@ -87,8 +91,8 @@ function start() {
                   <Route path="/flights" element={<FlightPage />} />
                   <Route path="/passengers" element={<PassengerPage />} />
                 </Route>
-                <Route element={<RoleCheck roles={["gate"]} />}>
-                  <Route path="/flights/:id" element={<Flight />} />
+                <Route element={<RoleCheck roles={["gate", "ground"]} />}>
+                  <Route path="/flights/:id" element={<FlightRedirect />} />
                 </Route>
               </Route>
               <Route path="/login" element={<LoginForm />} />

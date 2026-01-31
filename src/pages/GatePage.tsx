@@ -1,12 +1,9 @@
-import { useAuth } from "@/queries/checkAuth";
 import { Button } from "@/components/ui/button";
 import { useFlights } from "@/queries/useFlights";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router";
 
 export const GatePage = () => {
-  const { user } = useAuth();
-  if (!user.airline) return <div>Invalid airline</div>;
   const { flights } = useFlights();
   const navigate = useNavigate();
 
