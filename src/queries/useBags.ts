@@ -83,11 +83,20 @@ export const useBags = ({
   });
 
   const updateLocation = useMutation({
-    mutationFn: async ({ id, flight }: { id: number; flight: string }) => {
+    mutationFn: async ({
+      id,
+      flight,
+      location,
+    }: {
+      id: number;
+      flight: string;
+      location: string;
+    }) => {
       return new Promise<void>(async (resolve, reject) => {
         const res = await client.api.bags.put({
           id,
           flight,
+          location: location,
         });
         if (res.error) {
           reject(res.error.value);

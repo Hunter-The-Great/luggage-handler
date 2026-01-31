@@ -674,7 +674,7 @@ const elysia = new Elysia({ prefix: "/api" })
           ticket: body.ticket,
           location: {
             type: "check-in",
-            terminal: body.terminal,
+            terminal: body.terminal.toUpperCase(),
             counter: body.counter,
           } as BagLocation,
         })
@@ -821,9 +821,28 @@ const elysia = new Elysia({ prefix: "/api" })
       if (!(user.role === "ground")) {
         return status(403);
       }
+
+      const parseLocation = async (location: string) => {
+        switch (location) {
+          case "gate":
+            const flight = await db
+              .select()
+              .from(flightTable)
+              .where(eq(flightTable.flight, body.flight))
+              .catch(() => {
+                throw status(500, "Failed to fetch flight");
+              });
+            return { type: "gate", gate: flight[0]?.gate };
+          case "boarded":
+            return { type: "loaded", flight: body.flight };
+          default:
+            throw status(400, "Invalid location");
+        }
+      };
+
       await db
         .update(bagTable)
-        .set({ location: { type: "loaded", flight: body.flight } })
+        .set({ location: (await parseLocation(body.location)) as BagLocation })
         .where(eq(bagTable.id, body.id))
         .catch(() => {
           throw status(500, "Failed to update bag");
@@ -834,6 +853,7 @@ const elysia = new Elysia({ prefix: "/api" })
       body: t.Object({
         id: t.Number(),
         flight: t.String(),
+        location: t.String(),
       }),
     },
   );

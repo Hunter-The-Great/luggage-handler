@@ -90,7 +90,7 @@ export type RoleType = (typeof roles.enumValues)[number];
 export type BagLocation =
   | { type: "check-in"; terminal: string; counter: number }
   | { type: "security" }
-  | { type: "gate"; terminal: string; gate: number }
+  | { type: "gate"; gate: string }
   | { type: "loaded"; flight: string };
 export type Status = (typeof statuses.enumValues)[number];
 

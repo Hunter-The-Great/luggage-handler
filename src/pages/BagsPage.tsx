@@ -1,5 +1,9 @@
-import { useParams } from "react-router";
-import { usePassengers } from "@/queries/usePassengers";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { SheetForm } from "@/components/sheetForm";
+import { useFlights } from "@/queries/useFlights";
 import {
   Table,
   TableBody,
@@ -14,29 +18,43 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { BagLocation } from "@/db/schema";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { useBags } from "@/queries/useBags";
 import { MoreHorizontalIcon } from "lucide-react";
+import type { BagLocation } from "@/db/schema";
+import { usePassengers } from "@/queries/usePassengers";
 
-export const GroundFlight = () => {
-  const { id } = useParams();
-  const { passengers, updateStatus } = usePassengers(id!);
-  const { bags, updateLocation } = useBags({ flight: id });
-
-  const checkPassenger = (passenger: any) => {
-    if (!passenger || !passenger.status) return;
-    return passenger.status === "boarded" ? (
-      <p className="text-green-500">Yes</p>
-    ) : (
-      <p className="text-red-500">No</p>
-    );
-  };
+export const BagsPage = () => {
+  const { bags, updateLocation } = useBags({});
+  const { passengers, updateStatus } = usePassengers(null);
+  // const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const getPassenger = (ticket: number) => {
     return passengers.find((p) => p.ticket === ticket);
   };
+
+  // const selectAll = selected.size === flights.length && flights.length !== 0;
+
+  /*
+  const HandleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelected(new Set(flights.map((flight) => flight.id)));
+    } else {
+      setSelected(new Set());
+    }
+  };
+
+  const HandleSelectRow = (id: number, checked: boolean) => {
+    const newSelected = new Set(selected);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelected(newSelected);
+  };
+  */
 
   const parseLocation = (location: BagLocation) => {
     switch (location.type) {
@@ -55,21 +73,23 @@ export const GroundFlight = () => {
     }
   };
 
-  const loadBag = (id: number, ticket: number) => {
-    const flight = passengers.find((p) => p.ticket === ticket)?.flight;
-    if (!flight) return;
+  const HandleMove = async (id: number, flight?: string) => {
+    if (!flight) {
+      toast.error("Error fetching flight");
+      return;
+    }
     toast.promise(
       updateLocation
-        .mutateAsync({ id, flight, location: "boarded" })
+        .mutateAsync({ id, flight, location: "gate" })
         .catch((err) => {
           console.log(err);
           throw new Error(err);
         }),
       {
         position: "top-center",
-        loading: "Loading bag...",
-        success: "Bag loaded successfully",
-        error: "Failed to load bag",
+        loading: "Moving bag...",
+        success: "Bag moved successfully",
+        error: "Failed to move bag",
       },
     );
   };
@@ -89,6 +109,20 @@ export const GroundFlight = () => {
     );
   };
 
+  /* TODO: add a button to move selected bags
+    *
+      <div className="flex flex-row w-full justify-between gap-4 pb-4">
+        <Button
+          variant={"destructive"}
+          disabled={selected.size === 0}
+          onClick={HandleMove}
+        >
+          Delete
+        </Button>
+        <AddPassengerForm />
+      </div>
+  */
+
   return (
     <div className="flex flex-col justify-center gap-4 items-center p-6">
       <Table>
@@ -97,7 +131,6 @@ export const GroundFlight = () => {
             <TableCell>ID</TableCell>
             <TableCell>Ticket</TableCell>
             <TableCell>Location</TableCell>
-            <TableCell>Passenger Boarded?</TableCell>
             <TableCell className="text-center">Actions</TableCell>
           </TableRow>
         </TableHeader>
@@ -116,7 +149,6 @@ export const GroundFlight = () => {
                 <TableCell>{bag.id || "–"}</TableCell>
                 <TableCell>{bag.ticket || "–"}</TableCell>
                 <TableCell>{parseLocation(bag.location)}</TableCell>
-                <TableCell>{checkPassenger(passenger)}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -127,13 +159,13 @@ export const GroundFlight = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
-                        onClick={() => loadBag(bag.id, bag.ticket)}
+                        onClick={() => HandleMove(bag.id, passenger?.flight)}
                         disabled={
-                          bag.location.type !== "gate" || passenger?.remove
+                          bag.location.type !== "security" || passenger?.remove
                         }
                         className="text-sm text-left px-2 py-1 rounded-sm text-neutral-400/80 dark:dark:hover:text-neutral-400/80 dark:hover:bg-neutral-700/60 w-full"
                       >
-                        Load Bag
+                        Move Bag
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
