@@ -512,7 +512,7 @@ const elysia = new Elysia({ prefix: "/api" })
           flight: passengerTable.flight,
           status: passengerTable.status,
           remove: passengerTable.remove,
-          bags: count(bagTable.id),
+          bags: sql<any[]>`COALESCE(json_agg(${bagTable}), '[]')`,
         })
         .from(passengerTable)
         .where(parseQuery())

@@ -23,6 +23,12 @@ import { useState } from "react";
 import { SheetForm } from "@/components/sheetForm";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { Separator } from "@/components/ui/separator";
 
 const parseStatus = (status: Status) => {
   switch (status) {
@@ -113,6 +119,7 @@ export const AirlinePage = () => {
         </TableHeader>
         <TableBody>
           {passengers.map((passenger) => {
+            console.log(passenger.bags);
             return (
               <TableRow
                 className={
@@ -127,7 +134,33 @@ export const AirlinePage = () => {
                 <TableCell>{passenger.identification || "–"}</TableCell>
                 <TableCell>{passenger.ticket || "–"}</TableCell>
                 <TableCell>{passenger.flight || "–"}</TableCell>
-                <TableCell>{passenger.bags}</TableCell>
+                <TableCell>
+                  {
+                    <HoverCard>
+                      <HoverCardTrigger>
+                        <p className="underline">
+                          {passenger.bags[0] ? passenger.bags.length : 0}
+                        </p>
+                      </HoverCardTrigger>
+                      {passenger.bags[0] ? (
+                        <HoverCardContent
+                          side="bottom"
+                          align="start"
+                          className="w-min"
+                        >
+                          {passenger.bags.map((bag) => (
+                            <>
+                              <p>{bag?.id}</p>
+                              <Separator />
+                            </>
+                          ))}
+                        </HoverCardContent>
+                      ) : (
+                        <></>
+                      )}
+                    </HoverCard>
+                  }
+                </TableCell>
                 <TableCell>
                   {passenger.remove ? (
                     <p className="text-red-500 text-shadow-xs text-shadow-black/50 ">
