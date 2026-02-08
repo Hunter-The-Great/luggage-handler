@@ -158,8 +158,8 @@ const adminRouter = new Elysia({ prefix: "/admin" })
       switch (body.role) {
         case "gate":
         case "airline":
-          if (!body.airline) return status(400, "Airline is required");
-        // TODO: enforce airline to be 2 characters?
+          if (!body.airline || !body.fullAirline)
+            return status(400, "Airline is required");
         case "ground":
           if (!body.firstName) return status(400, "First name is required");
           if (body.firstName.length < 2)
@@ -213,6 +213,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
           email: body.email,
           phone: body.phone,
           airline: body.airline?.toUpperCase(),
+          fullAirline: body.fullAirline,
         });
         console.log(
           chalk.green("> "),
@@ -302,6 +303,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
         email: t.Nullable(t.String()),
         phone: t.Nullable(t.String()),
         airline: t.Nullable(t.String()),
+        fullAirline: t.Nullable(t.String()),
       }),
     },
   )

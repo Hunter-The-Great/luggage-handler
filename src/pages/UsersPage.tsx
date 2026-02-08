@@ -128,7 +128,9 @@ export const UsersPage = () => {
                 <TableCell>{user.lastName || "–"}</TableCell>
                 <TableCell>{user.email || "–"}</TableCell>
                 <TableCell>{user.phone || "–"}</TableCell>
-                <TableCell>{user.airline || "–"}</TableCell>
+                <TableCell>
+                  {(user.fullAirline || "–") + " | " + (user.airline || "–")}
+                </TableCell>
               </TableRow>
             );
           })}
@@ -146,6 +148,7 @@ const AddUserForm = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [airline, setAirline] = useState("");
+  const [fullAirline, setFullAirline] = useState("");
   const { AddUser } = useUsers();
 
   const handleSubmit = async () => {
@@ -158,6 +161,7 @@ const AddUserForm = () => {
           email,
           phone,
           airline,
+          fullAirline,
         })
           .then(() => {
             setEmail("");
@@ -230,6 +234,13 @@ const AddUserForm = () => {
       ></Input>
       <div className="flex h-2" />
       <Label>Airline</Label>
+      <Input
+        type="text"
+        className="border rounded-lg"
+        value={fullAirline}
+        onChange={(e) => setFullAirline(e.target.value)}
+      ></Input>
+      <Label>Airline Abbreviation</Label>
       <Input
         type="text"
         className="border rounded-lg"

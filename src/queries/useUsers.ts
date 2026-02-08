@@ -46,6 +46,7 @@ export const useUsers = () => {
       email: string;
       phone: string;
       airline: string;
+      fullAirline: string;
     }) => {
       return new Promise<void>(async (resolve, reject) => {
         const res = await client.api.admin.register.post({
@@ -55,6 +56,7 @@ export const useUsers = () => {
           email: body.email,
           phone: body.phone,
           airline: body.airline,
+          fullAirline: body.fullAirline,
         });
         if (res.error) {
           reject(res.error.value);

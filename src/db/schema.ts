@@ -30,6 +30,7 @@ export const usersTable = pgTable("users", {
   email: varchar({ length: 255 }),
   phone: varchar({ length: 255 }),
   airline: varchar({ length: 255 }),
+  fullAirline: varchar({ length: 255 }),
 });
 
 export const bagTable = pgTable("bags", {
