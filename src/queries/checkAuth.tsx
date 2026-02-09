@@ -19,6 +19,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     username: string;
     role: RoleType;
     airline: string;
+    fullAirline: string;
     newAccount: boolean;
   }>("auth", null);
 

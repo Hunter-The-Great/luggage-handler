@@ -42,7 +42,7 @@ const AllBags = () => {
   return user.role === "ground" ? (
     <div className="flex flex-1 flex-row justify-center p-4">
       <Button onClick={() => navigate("/bags")} variant={"large"}>
-        Manage All Bags
+        Security Checkpoint
       </Button>
     </div>
   ) : (

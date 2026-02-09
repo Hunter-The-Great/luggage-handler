@@ -28,6 +28,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
         username: t.String(),
         role: t.UnionEnum(["admin", "airline", "gate", "ground"]),
         airline: t.String(),
+        fullAirline: t.String(),
         newAccount: t.Boolean(),
       }),
     }),
@@ -50,6 +51,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
           role: user.role,
           airline: user.airline || "",
           newAccount: user.newAccount,
+          fullAirline: user.fullAirline || "",
         });
 
         auth?.set({
@@ -67,6 +69,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
             role: user.role,
             airline: user.airline || "",
             newAccount: user.newAccount,
+            fullAirline: user.fullAirline || "",
           },
         };
       } else return status(401, "Unauthorized");
@@ -712,6 +715,7 @@ const elysia = new Elysia({ prefix: "/api" })
             .select()
             .from(passengerTable)
             .where(eq(passengerTable.flight, query.flight))
+            .orderBy(bagTable.ticket)
             .catch(() => {
               throw status(500, "Failed to fetch passengers");
             });

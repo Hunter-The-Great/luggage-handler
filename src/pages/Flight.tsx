@@ -102,6 +102,9 @@ export const Flight = () => {
 
   return (
     <div className="flex flex-col justify-center gap-4 items-center p-6">
+      <h1 className="text-3xl font-bold">
+        Gate {flight.gate} | Flight {id}
+      </h1>
       <DepartButton />
       <Table>
         <TableHeader>

@@ -3,6 +3,7 @@ import { useAuth } from "./queries/checkAuth";
 
 export const TopBar = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const ChangePasswordButton = () => {
     return (
@@ -76,8 +77,6 @@ export const TopBar = () => {
   };
 
   const ProfileButtons = () => {
-    const { user } = useAuth();
-
     if (!user) return <LoginButton />;
     return (
       <>
@@ -93,7 +92,9 @@ export const TopBar = () => {
         <HomeButton />
       </div>
       <div className="flex-1 flex justify-center">
-        <h1 className="text-2xl font-bold" onClick={() => navigate("/")}></h1>
+        <h1 className="text-2xl font-bold" onClick={() => navigate("/")}>
+          {user?.fullAirline ? user.fullAirline : ""}
+        </h1>
       </div>
       <div className="flex-1 flex gap-2 justify-end">
         <ProfileButtons />
