@@ -93,9 +93,7 @@ export const TopBar = () => {
         <HomeButton />
       </div>
       <div className="flex-1 flex justify-center">
-        <h1 className="text-2xl font-bold" onClick={() => navigate("/")}>
-          Super Cool Website
-        </h1>
+        <h1 className="text-2xl font-bold" onClick={() => navigate("/")}></h1>
       </div>
       <div className="flex-1 flex gap-2 justify-end">
         <ProfileButtons />
