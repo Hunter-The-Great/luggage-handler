@@ -690,7 +690,7 @@ const elysia = new Elysia({ prefix: "/api" })
           console.log(err);
           throw status(500, "Failed to create bag");
         });
-      return status(204);
+      return status(200, { id });
     },
     {
       body: t.Object({

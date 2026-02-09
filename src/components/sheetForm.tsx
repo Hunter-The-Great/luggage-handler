@@ -11,7 +11,7 @@ export const SheetForm = (props: {
   success?: string | null;
   error?: string | null;
   cssDisabled?: boolean;
-  handleSubmit: (...args: any) => Promise<void>;
+  handleSubmit: (...args: any) => Promise<any>;
   submitArgs?: Array<any>;
   children: ReactNode;
 }) => {

@@ -20,10 +20,11 @@ export const GatePage = () => {
               return (
                 <Button
                   onClick={() => navigate(`/flights/${flight.flight}`)}
-                  className={`w-full ${flight.departed ? "dark:bg-green-500/80 dark:border-green-400/80 dark:hover:bg-green-600/80 dark:hover:border-green-500/80" : ""}`}
+                  //className={`w-full ${flight.departed ? "dark:bg-green-500/80 dark:border-green-400/80 dark:hover:bg-green-600/80 dark:hover:border-green-500/80" : ""}`}
+                  className="w-full"
                   variant={"large"}
                 >
-                  {flight.flight}
+                  {flight.gate}
                 </Button>
               );
             })}

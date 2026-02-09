@@ -119,7 +119,6 @@ export const AirlinePage = () => {
         </TableHeader>
         <TableBody>
           {passengers.map((passenger) => {
-            console.log(passenger.bags);
             return (
               <TableRow
                 className={
@@ -224,27 +223,31 @@ const AddBagForm = (props: { ticket: number }) => {
   const handleSubmit = async (ticket: number) => {
     return new Promise<void>(async (resolve) => {
       toast.promise(
-        addBag
-          .mutateAsync({
-            terminal,
-            counter,
-            ticket,
-          })
-          .then(() => {
-            setTerminal("");
-            setCounter("");
-            resolve();
-          })
-          .catch((err) => {
-            throw new Error(err);
-          }),
+        new Promise((resolve) => {
+          addBag
+            .mutateAsync({
+              terminal,
+              counter,
+              ticket,
+            })
+            .then((id) => {
+              setTerminal("");
+              setCounter("");
+              console.log(id);
+              resolve(id);
+            })
+            .catch((err) => {
+              throw new Error(err);
+            });
+        }),
         {
           position: "top-center",
           loading: "Adding bag...",
-          success: "Bag added successfully",
+          success: (id) => `Bag added successfully, id: ${id}`,
           error: (err) => err.message || "Failed to add bag",
         },
       );
+      resolve();
     });
   };
 

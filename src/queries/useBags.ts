@@ -58,7 +58,7 @@ export const useBags = ({
       counter: string;
       ticket: number;
     }) => {
-      return new Promise<void>(async (resolve, reject) => {
+      return new Promise<number>(async (resolve, reject) => {
         const counter = parseInt(body.counter);
         if (isNaN(counter)) {
           reject("Counter must be a number");
@@ -71,7 +71,7 @@ export const useBags = ({
         if (res.error) {
           reject(res.error.value);
         } else {
-          resolve();
+          resolve(res.data.id);
         }
       });
     },
