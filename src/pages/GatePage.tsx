@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useFlights } from "@/queries/useFlights";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router";
+import { useAuth } from "@/queries/checkAuth";
 
 export const GatePage = () => {
   const { flights } = useFlights();
@@ -29,11 +30,21 @@ export const GatePage = () => {
           </div>
         </div>
       </div>
-      <div className="flex flex-1 flex-row justify-center p-4">
-        <Button onClick={() => navigate("/bags")} variant={"large"}>
-          Manage All Bags
-        </Button>
-      </div>
+      <AllBags />
     </div>
+  );
+};
+
+const AllBags = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  return user.role === "ground" ? (
+    <div className="flex flex-1 flex-row justify-center p-4">
+      <Button onClick={() => navigate("/bags")} variant={"large"}>
+        Manage All Bags
+      </Button>
+    </div>
+  ) : (
+    <div className="flex flex-1"></div>
   );
 };
