@@ -46,7 +46,7 @@ export const flightTable = pgTable(
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     flight: varchar({ length: 6 }).notNull().unique(),
-    gate: varchar({ length: 255 }).notNull(),
+    gate: varchar({ length: 255 }).notNull().unique(),
     departed: boolean().notNull().default(false),
   },
   (table) => [
@@ -85,6 +85,12 @@ export const passengerTable = pgTable(
     }),
   ],
 );
+
+export const messageTable = pgTable("messages", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  to: varchar({ length: 255 }).notNull(),
+  body: varchar({ length: 255 }).notNull(),
+});
 
 export type RoleType = (typeof roles.enumValues)[number];
 

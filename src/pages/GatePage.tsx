@@ -24,7 +24,7 @@ export const GatePage = () => {
                   className="w-full"
                   variant={"large"}
                 >
-                  {flight.gate}
+                  {flight.gate + ": " + flight.flight}
                 </Button>
               );
             })}

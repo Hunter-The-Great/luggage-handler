@@ -1,9 +1,5 @@
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { SheetForm } from "@/components/sheetForm";
-import { useFlights } from "@/queries/useFlights";
 import {
   Table,
   TableBody,
@@ -73,7 +69,7 @@ export const BagsPage = () => {
     }
   };
 
-  const HandleMove = async (id: number, flight?: string) => {
+  const HandleClear = async (id: number, flight?: string) => {
     if (!flight) {
       toast.error("Error fetching flight");
       return;
@@ -81,6 +77,23 @@ export const BagsPage = () => {
     toast.promise(
       updateLocation
         .mutateAsync({ id, flight, location: "gate" })
+        .catch((err) => {
+          console.log(err);
+          throw new Error(err);
+        }),
+      {
+        position: "top-center",
+        loading: "Moving bag...",
+        success: "Bag moved successfully",
+        error: "Failed to move bag",
+      },
+    );
+  };
+
+  const HandleMove = async (id: number) => {
+    toast.promise(
+      updateLocation
+        .mutateAsync({ id, flight: "", location: "security" })
         .catch((err) => {
           console.log(err);
           throw new Error(err);
@@ -124,68 +137,155 @@ export const BagsPage = () => {
   */
 
   return (
-    <div className="flex flex-col justify-center gap-4 items-center p-6">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableCell>ID</TableCell>
-            <TableCell>Ticket</TableCell>
-            <TableCell>Location</TableCell>
-            <TableCell className="text-center">Actions</TableCell>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {bags.map((bag) => {
-            const passenger = getPassenger(bag.ticket);
-            return (
-              <TableRow
-                id={bag.id.toString()}
-                className={
-                  passenger?.remove
-                    ? "bg-red-800/50 dark:hover:bg-red-900/60"
-                    : ""
-                }
-              >
-                <TableCell>{bag.id || "–"}</TableCell>
-                <TableCell>{bag.ticket || "–"}</TableCell>
-                <TableCell>{parseLocation(bag.location)}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="size-8">
-                        <MoreHorizontalIcon />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => HandleMove(bag.id, passenger?.flight)}
-                        disabled={
-                          bag.location.type !== "security" || passenger?.remove
-                        }
-                        className="text-sm text-left px-2 py-1 rounded-sm text-neutral-400/80 dark:dark:hover:text-neutral-400/80 dark:hover:bg-neutral-700/60 w-full"
-                      >
-                        Move Bag
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => {
-                          if (passenger) flag(passenger.id);
-                          else toast.warning("Error fetching passenger");
-                        }}
-                        variant="destructive"
-                        disabled={passenger?.remove}
-                      >
-                        Flag for Removal
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+    <div className="flex flex-row w-full items-start">
+      <div className="flex flex-col justify-center gap-4 items-center p-6 w-full">
+        <div className="text-2xl font-bold">Ready to go to Security</div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Ticket</TableCell>
+              <TableCell>Flight</TableCell>
+              <TableCell>Location</TableCell>
+              <TableCell className="text-center">Actions</TableCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {bags
+              .filter((bag) => bag.location.type === "check-in")
+              .map((bag) => {
+                const passenger = getPassenger(bag.ticket);
+                return (
+                  <TableRow
+                    id={bag.id.toString()}
+                    className={
+                      passenger?.remove
+                        ? "bg-red-800/50 dark:hover:bg-red-900/60"
+                        : ""
+                    }
+                  >
+                    <TableCell>{bag.id || "–"}</TableCell>
+                    <TableCell>{bag.ticket || "–"}</TableCell>
+                    <TableCell>{bag.flight || "–"}</TableCell>
+                    <TableCell>{parseLocation(bag.location)}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                          >
+                            <MoreHorizontalIcon />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => HandleMove(bag.id)}
+                            disabled={
+                              bag.location.type !== "check-in" ||
+                              passenger?.remove
+                            }
+                            className="text-sm text-left px-2 py-1 rounded-sm text-neutral-400/80 dark:dark:hover:text-neutral-400/80 dark:hover:bg-neutral-700/60 w-full"
+                          >
+                            Move Bag
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              if (passenger) flag(passenger.id);
+                              else toast.warning("Error fetching passenger");
+                            }}
+                            variant="destructive"
+                            disabled={passenger?.remove}
+                          >
+                            Flag for Removal
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex flex-col justify-center gap-4 items-center p-6 w-full">
+        <div className="text-2xl font-bold">Awaiting Security Check</div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Ticket</TableCell>
+              <TableCell>Flight</TableCell>
+              <TableCell>Location</TableCell>
+              <TableCell className="text-center">Actions</TableCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {bags
+              .filter((bag) => bag.location.type === "security")
+              .map((bag) => {
+                const passenger = getPassenger(bag.ticket);
+                return (
+                  <TableRow
+                    id={bag.id.toString()}
+                    className={
+                      passenger?.remove
+                        ? "bg-red-800/50 dark:hover:bg-red-900/60"
+                        : ""
+                    }
+                  >
+                    <TableCell>{bag.id || "–"}</TableCell>
+                    <TableCell>{bag.ticket || "–"}</TableCell>
+                    <TableCell>{bag.flight || "–"}</TableCell>
+                    <TableCell>{parseLocation(bag.location)}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                          >
+                            <MoreHorizontalIcon />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              HandleClear(bag.id, passenger?.flight)
+                            }
+                            disabled={
+                              bag.location.type !== "security" ||
+                              passenger?.remove
+                            }
+                            className="text-sm text-left px-2 py-1 rounded-sm text-neutral-400/80 dark:dark:hover:text-neutral-400/80 dark:hover:bg-neutral-700/60 w-full"
+                          >
+                            Clear Bag
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              if (passenger) flag(passenger.id);
+                              else toast.warning("Error fetching passenger");
+                            }}
+                            variant="destructive"
+                            disabled={passenger?.remove}
+                          >
+                            Flag for Removal
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

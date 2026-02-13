@@ -28,11 +28,17 @@ export const Flight = () => {
     return true;
   };
 
-  const checkPassengers = (): boolean => {
+  const checkAllBags = (): boolean => {
+    const absentBags = bags.filter((bag) => bag.location.type !== "loaded");
+    if (absentBags.length !== 0) return false;
+    return true;
+  };
+
+  const checkReady = (): boolean => {
     const absentPassengers = passengers.filter(
       (passenger) => passenger.status !== "boarded",
     );
-    if (absentPassengers.length !== 0) return false;
+    if (absentPassengers.length !== 0 || !checkAllBags()) return false;
     return true;
   };
 
@@ -85,17 +91,17 @@ export const Flight = () => {
   const DepartButton = () => {
     if (flight.departed) {
       return (
-        <p className="text-lg font-bold text-green-500">Flight Departed</p>
+        <div className=" flex flex-1 text-lg font-bold text-green-500">
+          Flight Departed
+        </div>
       );
     } else {
       return (
-        <Button
-          variant={"primary"}
-          onClick={depart}
-          disabled={!checkPassengers()}
-        >
-          Ready for Departure
-        </Button>
+        <div className="flex flex-1 justify-center">
+          <Button variant={"primary"} onClick={depart} disabled={!checkReady()}>
+            Ready for Departure
+          </Button>
+        </div>
       );
     }
   };
@@ -103,9 +109,20 @@ export const Flight = () => {
   return (
     <div className="flex flex-col justify-center gap-4 items-center p-6">
       <h1 className="text-3xl font-bold">
-        Gate {flight.gate} | Flight {id}
+        Gate {flight.gate}: Flight {id}
       </h1>
-      <DepartButton />
+      <div className="flex flex-row w-full place-content-between">
+        <div className="flex flex-1 gap-4 items-end">
+          All Bags Loaded?
+          {checkAllBags() ? (
+            <div className="text-green-500">Yes</div>
+          ) : (
+            <div className="text-red-500">No</div>
+          )}
+        </div>
+        <DepartButton />
+        <div className="flex flex-1" />
+      </div>
       <Table>
         <TableHeader>
           <TableRow>

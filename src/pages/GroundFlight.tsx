@@ -23,6 +23,7 @@ import { MoreHorizontalIcon } from "lucide-react";
 export const GroundFlight = () => {
   const { id } = useParams();
   const { passengers, updateStatus } = usePassengers(id!);
+  console.log(id);
   const { bags, updateLocation } = useBags({ flight: id });
 
   const checkPassenger = (passenger: any) => {
@@ -97,6 +98,7 @@ export const GroundFlight = () => {
             <TableCell>ID</TableCell>
             <TableCell>Ticket</TableCell>
             <TableCell>Location</TableCell>
+            <TableCell>Flight</TableCell>
             <TableCell>Passenger Boarded?</TableCell>
             <TableCell className="text-center">Actions</TableCell>
           </TableRow>
@@ -116,6 +118,7 @@ export const GroundFlight = () => {
                 <TableCell>{bag.id || "–"}</TableCell>
                 <TableCell>{bag.ticket || "–"}</TableCell>
                 <TableCell>{parseLocation(bag.location)}</TableCell>
+                <TableCell>{bag.flight || "-"}</TableCell>
                 <TableCell>{checkPassenger(passenger)}</TableCell>
                 <TableCell>
                   <DropdownMenu>

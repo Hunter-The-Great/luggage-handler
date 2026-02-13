@@ -387,6 +387,9 @@ const adminRouter = new Elysia({ prefix: "/admin" })
             err.cause.message &&
             err.cause.message.includes("duplicate key value")
           ) {
+            if (err.cause.message.includes("gate")) {
+              throw status(400, "Gate already in use");
+            }
             throw status(400, "Flight already exists");
           }
           throw status(500, "Failed to create flight");
@@ -707,6 +710,7 @@ const elysia = new Elysia({ prefix: "/api" })
     "/bags",
     async ({ user, query, status }) => {
       if (!user) return status(401);
+
       const parseQuery = async () => {
         if (query.ticket && query.ticket !== "") {
           return eq(bagTable.ticket, parseInt(query.ticket));
@@ -715,8 +719,9 @@ const elysia = new Elysia({ prefix: "/api" })
             .select()
             .from(passengerTable)
             .where(eq(passengerTable.flight, query.flight))
-            .orderBy(bagTable.ticket)
-            .catch(() => {
+            .orderBy(passengerTable.ticket)
+            .catch((err) => {
+              console.log(err);
               throw status(500, "Failed to fetch passengers");
             });
           const tickets = passengers.map((passenger) => passenger.ticket);
@@ -725,14 +730,22 @@ const elysia = new Elysia({ prefix: "/api" })
           return sql`true`;
         }
       };
+
       const bags = await db
-        .select()
+        .select({
+          id: bagTable.id,
+          ticket: bagTable.ticket,
+          location: bagTable.location,
+          flight: passengerTable.flight,
+        })
         .from(bagTable)
         .where(await parseQuery())
         .orderBy(bagTable.id)
+        .leftJoin(passengerTable, eq(bagTable.ticket, passengerTable.ticket))
         .catch(() => {
           throw status(500, "Failed to fetch bags");
         });
+
       return status(200, bags);
     },
     {
@@ -830,6 +843,8 @@ const elysia = new Elysia({ prefix: "/api" })
 
       const parseLocation = async (location: string) => {
         switch (location) {
+          case "security":
+            return { type: "security" };
           case "gate":
             const flight = await db
               .select()
