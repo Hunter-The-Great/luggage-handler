@@ -24,12 +24,19 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 export const UsersPage = () => {
   const { users, RemoveUsers } = useUsers();
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [roleFilter, setRoleFilter] = useState<RoleType | "all">("all");
 
-  const selectAll = selected.size === users.length && users.length != 0;
+  const filteredUsers = users.filter((user) => {
+    if (roleFilter === "all") return true;
+    return user.role === roleFilter;
+  });
+
+  const selectAll =
+    selected.size === filteredUsers.length && filteredUsers.length != 0;
 
   const HandleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(new Set(users.map((user) => user.id)));
+      setSelected(new Set(filteredUsers.map((user) => user.id)));
     } else {
       setSelected(new Set());
     }
@@ -78,17 +85,33 @@ export const UsersPage = () => {
     });
   };
 
-  // TODO: filter by role?
   return (
     <div className="flex flex-col justify-center items-center p-6">
       <div className="flex flex-row w-full justify-between gap-4 pb-4">
-        <Button
-          variant={"destructive"}
-          disabled={selected.size === 0}
-          onClick={HandleDelete}
-        >
-          Delete
-        </Button>
+        <div className="flex gap-4 items-center">
+          <Button
+            variant={"destructive"}
+            disabled={selected.size === 0}
+            onClick={HandleDelete}
+          >
+            Delete
+          </Button>
+          <NativeSelect
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value as RoleType | "all")}
+            className="w-48"
+          >
+            <NativeSelectOption value="all">All Roles</NativeSelectOption>
+            {roles.enumValues.map((role) => {
+              if (role === "admin") return null;
+              return (
+                <NativeSelectOption key={role} value={role}>
+                  {role}
+                </NativeSelectOption>
+              );
+            })}
+          </NativeSelect>
+        </div>
         <AddUserForm />
       </div>
       <Table>
@@ -110,10 +133,10 @@ export const UsersPage = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => {
+          {filteredUsers.map((user) => {
             if (user.role === "admin") return null;
             return (
-              <TableRow id={user.id.toString()}>
+              <TableRow key={user.id} id={user.id.toString()}>
                 <TableCell>
                   <Checkbox
                     checked={selected.has(user.id)}
@@ -129,7 +152,9 @@ export const UsersPage = () => {
                 <TableCell>{user.email || "–"}</TableCell>
                 <TableCell>{user.phone || "–"}</TableCell>
                 <TableCell>
-                  {(user.fullAirline || "–") + " | " + (user.airline || "–")}
+                  {user.role === "ground"
+                    ? "-"
+                    : (user.fullAirline || "–") + " | " + (user.airline || "–")}
                 </TableCell>
               </TableRow>
             );
@@ -191,7 +216,11 @@ const AddUserForm = () => {
         <NativeSelectOption value="">Select a role</NativeSelectOption>
         {roles.enumValues.map((role) => {
           if (role === "admin") return;
-          return <NativeSelectOption value={role}>{role}</NativeSelectOption>;
+          return (
+            <NativeSelectOption key={role} value={role}>
+              {role}
+            </NativeSelectOption>
+          );
         })}
       </NativeSelect>
       <div className="flex h-2" />
