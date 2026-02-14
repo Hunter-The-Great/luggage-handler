@@ -45,9 +45,15 @@ const parseStatus = (status: Status) => {
 
 export const AirlinePage = () => {
   const { user } = useAuth();
+  const [searchTicket, setSearchTicket] = useState("");
+
   if (!user.airline) return <div>Invalid airline</div>;
   const { passengers, updateStatus } = usePassengers(null);
   const { removeBags } = useBags({});
+
+  const filteredPassengers = passengers.filter((passenger) =>
+    passenger.ticket.toString().includes(searchTicket),
+  );
 
   const checkIn = (id: number) => {
     toast.promise(
@@ -104,6 +110,15 @@ export const AirlinePage = () => {
 
   return (
     <div className="flex flex-col justify-center items-center p-6">
+      <div className="w-full max-w-md mb-4">
+        <Input
+          type="text"
+          placeholder="Search by ticket number..."
+          value={searchTicket}
+          onChange={(e) => setSearchTicket(e.target.value)}
+          className="w-full"
+        />
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -118,7 +133,7 @@ export const AirlinePage = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {passengers.map((passenger) => {
+          {filteredPassengers.map((passenger) => {
             return (
               <TableRow
                 className={
@@ -127,6 +142,7 @@ export const AirlinePage = () => {
                     : ""
                 }
                 id={passenger.id.toString()}
+                key={passenger.id}
               >
                 <TableCell>{passenger.firstName || "–"}</TableCell>
                 <TableCell>{passenger.lastName || "–"}</TableCell>
