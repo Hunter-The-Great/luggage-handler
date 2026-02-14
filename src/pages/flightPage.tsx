@@ -94,7 +94,9 @@ export const FlightPage = () => {
               />
             </TableCell>
             <TableCell>Flight Number</TableCell>
+            <TableCell>Airline</TableCell>
             <TableCell>Gate Number</TableCell>
+            <TableCell>Destination</TableCell>
             <TableCell>Number of Passengers</TableCell>
             <TableCell>Status</TableCell>
           </TableRow>
@@ -112,7 +114,9 @@ export const FlightPage = () => {
                   />
                 </TableCell>
                 <TableCell>{flight.flight || "–"}</TableCell>
+                <TableCell>{flight.airline || "–"}</TableCell>
                 <TableCell>{flight.gate || "–"}</TableCell>
+                <TableCell>{flight.destination || "–"}</TableCell>
                 <TableCell>{flight.passengerCount}</TableCell>
                 <TableCell>
                   {flight.departed ? (
@@ -134,6 +138,8 @@ export const FlightPage = () => {
 const AddFlightForm = () => {
   const [flight, setFlight] = useState("");
   const [gate, setGate] = useState("");
+  const [airline, setAirline] = useState("");
+  const [destination, setDestination] = useState("");
   const { addFlight } = useFlights();
 
   const handleSubmit = async () => {
@@ -143,6 +149,8 @@ const AddFlightForm = () => {
           .mutateAsync({
             flight,
             gate,
+            airline,
+            destination,
           })
           .then(() => {
             setFlight("");
@@ -181,6 +189,20 @@ const AddFlightForm = () => {
         className="border rounded-lg"
         value={gate}
         onChange={(e) => setGate(e.target.value)}
+      ></Input>
+      <Label>Airline</Label>
+      <Input
+        type="text"
+        className="border rounded-lg"
+        value={airline}
+        onChange={(e) => setAirline(e.target.value)}
+      ></Input>
+      <Label>Destination</Label>
+      <Input
+        type="text"
+        className="border rounded-lg"
+        value={destination}
+        onChange={(e) => setDestination(e.target.value)}
       ></Input>
     </SheetForm>
   );

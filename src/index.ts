@@ -381,6 +381,8 @@ const adminRouter = new Elysia({ prefix: "/admin" })
         .values({
           flight: body.flight.toUpperCase(),
           gate: body.gate.toUpperCase(),
+          airline: body.airline,
+          destination: body.destination,
         })
         .catch((err) => {
           if (
@@ -400,6 +402,8 @@ const adminRouter = new Elysia({ prefix: "/admin" })
       body: t.Object({
         flight: t.String(),
         gate: t.String(),
+        airline: t.String(),
+        destination: t.String(),
       }),
     },
   )
@@ -787,6 +791,8 @@ const elysia = new Elysia({ prefix: "/api" })
           flight: flightTable.flight,
           gate: flightTable.gate,
           departed: flightTable.departed,
+          airline: flightTable.airline,
+          destination: flightTable.destination,
           passengerCount: count(passengerTable.id),
         })
         .from(flightTable)
@@ -804,6 +810,8 @@ const elysia = new Elysia({ prefix: "/api" })
           flight: flightTable.flight,
           gate: flightTable.gate,
           departed: flightTable.departed,
+          airline: flightTable.airline,
+          destination: flightTable.destination,
           passengerCount: count(passengerTable.id),
         })
         .from(flightTable)

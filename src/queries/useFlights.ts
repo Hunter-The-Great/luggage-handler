@@ -38,11 +38,18 @@ export const useFlights = () => {
   });
 
   const addFlight = useMutation({
-    mutationFn: async (body: { flight: string; gate: string }) => {
+    mutationFn: async (body: {
+      flight: string;
+      gate: string;
+      airline: string;
+      destination: string;
+    }) => {
       return new Promise<void>(async (resolve, reject) => {
         const res = await client.api.admin.flights.post({
           flight: body.flight,
           gate: body.gate,
+          airline: body.airline,
+          destination: body.destination,
         });
         if (res.error) {
           reject(res.error.value);

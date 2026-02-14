@@ -47,6 +47,8 @@ export const flightTable = pgTable(
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     flight: varchar({ length: 6 }).notNull().unique(),
     gate: varchar({ length: 255 }).notNull().unique(),
+    destination: varchar({ length: 255 }),
+    airline: varchar({ length: 255 }),
     departed: boolean().notNull().default(false),
   },
   (table) => [
