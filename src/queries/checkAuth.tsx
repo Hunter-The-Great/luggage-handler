@@ -10,6 +10,7 @@ type Auth = {
     password: string,
   ) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
+  updateGate: (gate: string) => Promise<void>;
 };
 
 const AuthContext = createContext<null | Auth>(null);
@@ -21,6 +22,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     airline: string;
     fullAirline: string;
     newAccount: boolean;
+    gate: string;
   }>("auth", null);
 
   useEffect(() => {
@@ -63,8 +65,15 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const updateGate = async (gate: string) => {
+    const response = await client.api.auth.updateGate.post({ gate });
+    if (response.error) throw new Error("Failed to update gate");
+
+    setUser(response.data.user);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, updateGate }}>
       {children}
     </AuthContext.Provider>
   );

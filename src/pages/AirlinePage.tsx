@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Status } from "@/db/schema";
+import { type Status } from "@/db/schema";
 import { usePassengers } from "@/queries/usePassengers";
 import { toast } from "sonner";
 import { useBags } from "@/queries/useBags";
@@ -29,6 +29,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Separator } from "@/components/ui/separator";
+import { useMessages } from "@/queries/useMessages";
 
 const parseStatus = (status: Status) => {
   switch (status) {
@@ -45,6 +46,7 @@ const parseStatus = (status: Status) => {
 
 export const AirlinePage = () => {
   const { user } = useAuth();
+  const { addMessage } = useMessages();
   const [searchTicket, setSearchTicket] = useState("");
 
   if (!user.airline) return <div>Invalid airline</div>;
@@ -71,8 +73,20 @@ export const AirlinePage = () => {
 
   const flag = async (id: number) => {
     toast.promise(
-      updateStatus.mutateAsync({ id, flag: true }).catch((err) => {
-        throw new Error(err);
+      new Promise<void>((resolve, reject) => {
+        updateStatus.mutateAsync({ id, flag: true }).catch((err) => {
+          reject(err);
+        });
+        addMessage
+          .mutateAsync({
+            airline: user.airline,
+            to: "admin",
+            body: `Passenger with ticket ${passengers.find((p) => p.id === id)?.ticket} flagged for removal`,
+          })
+          .catch((err) => {
+            reject(err);
+          });
+        resolve();
       }),
       {
         position: "top-center",
@@ -215,7 +229,6 @@ export const AirlinePage = () => {
                       <DropdownMenuItem
                         onClick={() => flag(passenger.id)}
                         variant="destructive"
-                        disabled={passenger.remove}
                       >
                         Flag for Removal
                       </DropdownMenuItem>
@@ -249,7 +262,6 @@ const AddBagForm = (props: { ticket: number }) => {
             .then((id) => {
               setTerminal("");
               setCounter("");
-              console.log(id);
               resolve(id);
             })
             .catch((err) => {

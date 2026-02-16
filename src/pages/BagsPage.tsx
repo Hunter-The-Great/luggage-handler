@@ -78,7 +78,6 @@ export const BagsPage = () => {
       updateLocation
         .mutateAsync({ id, flight, location: "gate" })
         .catch((err) => {
-          console.log(err);
           throw new Error(err);
         }),
       {
@@ -95,7 +94,6 @@ export const BagsPage = () => {
       updateLocation
         .mutateAsync({ id, flight: "", location: "security" })
         .catch((err) => {
-          console.log(err);
           throw new Error(err);
         }),
       {
@@ -110,7 +108,6 @@ export const BagsPage = () => {
   const flag = async (id: number) => {
     toast.promise(
       updateStatus.mutateAsync({ id, flag: true }).catch((err) => {
-        console.log(err);
         throw new Error(err);
       }),
       {

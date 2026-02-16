@@ -13,12 +13,17 @@ import type { Status } from "@/db/schema";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useBags } from "@/queries/useBags";
+import { useMessages } from "@/queries/useMessages";
+import { useAuth } from "@/queries/checkAuth";
+import { Forbidden } from "./403";
 
 export const Flight = () => {
   const { id } = useParams();
+  const { addMessage } = useMessages();
+  const { user, updateGate } = useAuth();
   const { flights, departFlight } = useFlights();
   const { passengers, updateStatus } = usePassengers(id!);
-  const { bags } = useBags({});
+  const { bags } = useBags({ flight: id });
 
   const checkBags = (ticket: number): boolean => {
     const absentBags = bags.filter(
@@ -76,8 +81,20 @@ export const Flight = () => {
 
   const depart = () => {
     toast.promise(
-      departFlight.mutateAsync(id!).catch((err) => {
-        throw new Error(err);
+      new Promise<void>((resolve, reject) => {
+        departFlight.mutateAsync(id!).catch((err) => {
+          reject(err);
+        });
+        addMessage
+          .mutateAsync({
+            airline: user.airline,
+            to: "admin",
+            body: `Flight ${id} departed`,
+          })
+          .catch((err) => {
+            reject(err);
+          });
+        resolve();
       }),
       {
         position: "top-center",
@@ -86,12 +103,13 @@ export const Flight = () => {
         error: "Failed to depart flight",
       },
     );
+    updateGate("");
   };
 
   const DepartButton = () => {
     if (flight.departed) {
       return (
-        <div className=" flex flex-1 text-lg font-bold text-green-500">
+        <div className=" flex flex-1 justify-center text-lg font-bold text-green-500">
           Flight Departed
         </div>
       );
@@ -105,6 +123,10 @@ export const Flight = () => {
       );
     }
   };
+
+  if (user.gate !== flight.flight) {
+    return <Forbidden />;
+  }
 
   return (
     <div className="flex flex-col justify-center gap-4 items-center p-6">

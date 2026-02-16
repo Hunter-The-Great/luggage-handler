@@ -9,7 +9,6 @@ const getBags = async (flight?: string, ticket?: string) => {
     },
   });
   if (loaded.error) {
-    console.log(loaded.error.value);
     throw new Error("Failed to load bags");
   }
   return loaded.data;

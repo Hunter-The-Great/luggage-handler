@@ -1,0 +1,1 @@
+ALTER TABLE "messages" ADD COLUMN "airline" varchar(255) NOT NULL;

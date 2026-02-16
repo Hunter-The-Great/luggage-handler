@@ -6,7 +6,6 @@ const getPassengers = async (flight: string | null) => {
     query: { flight: flight || "" },
   });
   if (loaded.error) {
-    console.log(loaded.error.value);
     throw new Error("Failed to load passengers");
   }
   return loaded.data.sort((a, b) => a.flight.localeCompare(b.flight));

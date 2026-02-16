@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "./queries/checkAuth";
+import { Button } from "./components/ui/button";
 
 export const TopBar = () => {
   const navigate = useNavigate();
@@ -8,12 +9,9 @@ export const TopBar = () => {
   const ChangePasswordButton = () => {
     return (
       <>
-        <Link
-          className="px-2 py-1 text-sm underline decoration-neutral-300 cursor-pointer underline-n"
-          to="/change-password"
-        >
+        <Button variant={"link"} onClick={() => navigate("/change-password")}>
           Change Password
-        </Link>
+        </Button>
       </>
     );
   };
@@ -26,12 +24,9 @@ export const TopBar = () => {
     };
     return (
       <>
-        <button
-          className="px-2 py-1 rounded-lg text-sm  bg-neutral-700/80 hover:bg-neutral-700 transition duration-200"
-          onClick={() => handleLogout()}
-        >
+        <Button variant={"secondary"} onClick={() => handleLogout()}>
           Logout
-        </button>
+        </Button>
       </>
     );
   };
@@ -42,12 +37,9 @@ export const TopBar = () => {
     };
     return (
       <>
-        <button
-          className="px-2 py-1 rounded-lg text-sm  bg-neutral-700/80 hover:bg-neutral-700 transition duration-200"
-          onClick={() => handleLogin()}
-        >
+        <Button variant={"secondary"} onClick={() => handleLogin()}>
           Login
-        </button>
+        </Button>
       </>
     );
   };
@@ -76,10 +68,21 @@ export const TopBar = () => {
     );
   };
 
+  const MessageButton = () => {
+    return (
+      <>
+        <Button variant={"link"} onClick={() => navigate("/messages")}>
+          Messages
+        </Button>
+      </>
+    );
+  };
+
   const ProfileButtons = () => {
     if (!user) return <LoginButton />;
     return (
       <>
+        <MessageButton />
         <ChangePasswordButton />
         <LogoutButton />
       </>
@@ -96,7 +99,7 @@ export const TopBar = () => {
           {user?.fullAirline ? user.fullAirline : ""}
         </h1>
       </div>
-      <div className="flex-1 flex gap-2 justify-end">
+      <div className="flex-1 flex justify-end">
         <ProfileButtons />
       </div>
     </nav>

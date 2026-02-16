@@ -31,6 +31,7 @@ export const usersTable = pgTable("users", {
   phone: varchar({ length: 255 }),
   airline: varchar({ length: 255 }),
   fullAirline: varchar({ length: 255 }),
+  assignedGate: varchar({ length: 255 }),
 });
 
 export const bagTable = pgTable("bags", {
@@ -90,6 +91,7 @@ export const passengerTable = pgTable(
 
 export const messageTable = pgTable("messages", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  airline: varchar({ length: 255 }).notNull(),
   to: varchar({ length: 255 }).notNull(),
   body: varchar({ length: 255 }).notNull(),
 });

@@ -7,6 +7,7 @@ import {
   bagTable,
   flightTable,
   lower,
+  messageTable,
   passengerTable,
   usersTable,
 } from "./db/schema";
@@ -30,6 +31,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
         airline: t.String(),
         fullAirline: t.String(),
         newAccount: t.Boolean(),
+        gate: t.String(),
       }),
     }),
   )
@@ -52,6 +54,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
           airline: user.airline || "",
           newAccount: user.newAccount,
           fullAirline: user.fullAirline || "",
+          gate: "",
         });
 
         auth?.set({
@@ -70,6 +73,7 @@ const authRouter = new Elysia({ prefix: "/auth" })
             airline: user.airline || "",
             newAccount: user.newAccount,
             fullAirline: user.fullAirline || "",
+            gate: "",
           },
         };
       } else return status(401, "Unauthorized");
@@ -123,7 +127,47 @@ const authRouter = new Elysia({ prefix: "/auth" })
   )
   .get("/profile", async ({ user }) => {
     return user;
-  });
+  })
+  .post(
+    "/updateGate",
+    async ({ user, body, status, jwt, cookie: { auth } }) => {
+      if (!user) return status(401);
+
+      const token = await jwt.sign({
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        airline: user.airline || "",
+        newAccount: user.newAccount,
+        fullAirline: user.fullAirline || "",
+        gate: body.gate,
+      });
+      auth?.set({
+        value: token,
+        httpOnly: true,
+        maxAge: 604800,
+        path: "/",
+      });
+
+      return {
+        success: true,
+        user: {
+          username: user.username,
+          id: user.id,
+          role: user.role,
+          airline: user.airline || "",
+          newAccount: user.newAccount,
+          fullAirline: user.fullAirline || "",
+          gate: body.gate,
+        },
+      };
+    },
+    {
+      body: t.Object({
+        gate: t.String(),
+      }),
+    },
+  );
 
 const adminRouter = new Elysia({ prefix: "/admin" })
   .use(
@@ -136,6 +180,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
         role: t.UnionEnum(["admin", "airline", "gate", "ground"]),
         airline: t.String(),
         newAccount: t.Boolean(),
+        gate: t.String(),
       }),
     }),
   )
@@ -156,7 +201,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
   .post(
     "/register",
     async ({ status, body }) => {
-      const emailRegex = /^\w+@\w+\.\w+$/;
+      const emailRegex = /^\w{4,}@\w{3,}\.\w{2,}$/;
       const phonesRegex = /^[1-9]\d{9}$/;
       switch (body.role) {
         case "gate":
@@ -883,6 +928,60 @@ const elysia = new Elysia({ prefix: "/api" })
         id: t.Number(),
         flight: t.String(),
         location: t.String(),
+      }),
+    },
+  )
+  .get("/messages", async ({ status }) => {
+    const messages = await db
+      .select()
+      .from(messageTable)
+      .orderBy(messageTable.id)
+      .catch(() => {
+        throw status(500, "Failed to fetch messages");
+      });
+    return status(200, messages);
+  })
+  .post(
+    "/messages",
+    async ({ body, status }) => {
+      const message = await db
+        .insert(messageTable)
+        .values({
+          airline: body.airline,
+          to: body.to,
+          body: body.body,
+        })
+        .catch((err) => {
+          console.log(err);
+          if (err.cause.message.includes("violates foreign key constraint")) {
+            throw status(400, "Airline does not exist");
+          }
+          throw status(500, "Failed to create message");
+        });
+      return status(200, message);
+    },
+    {
+      body: t.Object({
+        airline: t.String(),
+        to: t.String(),
+        body: t.String(),
+      }),
+    },
+  )
+  .delete(
+    "/messages",
+    async ({ body, status }) => {
+      await db
+        .delete(messageTable)
+        .where(inArray(messageTable.id, body.ids))
+        .catch(() => {
+          throw status(500, "Failed to delete messages");
+        });
+      return status(204);
+    },
+    {
+      body: t.Object({
+        ids: t.Array(t.Number()),
       }),
     },
   );

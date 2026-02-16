@@ -27,6 +27,7 @@ import { GatePage } from "./pages/GatePage";
 import { Flight } from "./pages/Flight";
 import { GroundFlight } from "./pages/GroundFlight";
 import { BagsPage } from "./pages/BagsPage";
+import { MessageBoard } from "./pages/MessageBoard";
 
 const Redirect = () => {
   const { user } = useAuth();
@@ -98,6 +99,7 @@ function start() {
                 <Route element={<RoleCheck roles={["ground"]} />}>
                   <Route path="/bags" element={<BagsPage />} />
                 </Route>
+                <Route path="/messages" element={<MessageBoard />} />
               </Route>
               <Route path="/login" element={<LoginForm />} />
               <Route path="*" element={<NotFound />} />

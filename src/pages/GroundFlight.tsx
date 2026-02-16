@@ -19,11 +19,18 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useBags } from "@/queries/useBags";
 import { MoreHorizontalIcon } from "lucide-react";
+import { useAuth } from "@/queries/checkAuth";
+import { useMessages } from "@/queries/useMessages";
+import { Forbidden } from "./403";
+import { useFlights } from "@/queries/useFlights";
+import { NotFound } from "./404";
 
 export const GroundFlight = () => {
   const { id } = useParams();
+  const { user } = useAuth();
+  const { addMessage } = useMessages();
+  const { flights } = useFlights();
   const { passengers, updateStatus } = usePassengers(id!);
-  console.log(id);
   const { bags, updateLocation } = useBags({ flight: id });
 
   const checkPassenger = (passenger: any) => {
@@ -34,6 +41,11 @@ export const GroundFlight = () => {
       <p className="text-red-500">No</p>
     );
   };
+
+  const flight = flights.find((f) => f.flight === id!.toUpperCase());
+  if (!flight) {
+    return <NotFound />;
+  }
 
   const getPassenger = (ticket: number) => {
     return passengers.find((p) => p.ticket === ticket);
@@ -63,7 +75,6 @@ export const GroundFlight = () => {
       updateLocation
         .mutateAsync({ id, flight, location: "boarded" })
         .catch((err) => {
-          console.log(err);
           throw new Error(err);
         }),
       {
@@ -77,9 +88,21 @@ export const GroundFlight = () => {
 
   const flag = async (id: number) => {
     toast.promise(
-      updateStatus.mutateAsync({ id, flag: true }).catch((err) => {
-        console.log(err);
-        throw new Error(err);
+      new Promise<void>((resolve, reject) => {
+        updateStatus.mutateAsync({ id, flag: true }).catch((err) => {
+          reject(err);
+        });
+        const passenger = passengers.find((p) => p.id === id);
+        addMessage
+          .mutateAsync({
+            airline: passenger!.flight.substring(0, 2),
+            to: "airline",
+            body: `Security violation on bag belonging to passenger with ticket number ${passenger?.ticket}`,
+          })
+          .catch((err) => {
+            reject(err);
+          });
+        resolve();
       }),
       {
         position: "top-center",
@@ -89,6 +112,10 @@ export const GroundFlight = () => {
       },
     );
   };
+
+  if (user.gate !== flight.flight) {
+    return <Forbidden />;
+  }
 
   return (
     <div className="flex flex-col justify-center gap-4 items-center p-6">
