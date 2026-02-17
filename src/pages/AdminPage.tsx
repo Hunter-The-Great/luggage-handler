@@ -38,7 +38,6 @@ export function AdminPage() {
           <Button variant={"large"} onClick={() => navigate("/flights")}>
             Manage Flights
           </Button>
-          <ReactQueryDevtools initialIsOpen={false} />
         </div>
         <div className="flex flex-1 flex-col items-center pr-10">
           <div className="text-xl text-neutral-50 font-bold">Notices</div>

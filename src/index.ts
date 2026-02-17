@@ -39,6 +39,12 @@ const authRouter = new Elysia({ prefix: "/auth" })
     "/login",
     async ({ body, status, jwt, cookie: { auth } }) => {
       const { username, password } = body;
+      if (username === "") {
+        return status(400, "Username is required");
+      }
+      if (password === "") {
+        return status(400, "Password is required");
+      }
       const user = (
         await db
           .select()
@@ -421,6 +427,15 @@ const adminRouter = new Elysia({ prefix: "/admin" })
       if (!flightRegex.test(body.flight)) {
         return status(400, "Invalid flight number");
       }
+      if (!body.gate) {
+        return status(400, "Gate is required");
+      }
+      if (!body.airline) {
+        return status(400, "Airline is required");
+      }
+      if (!body.destination) {
+        return status(400, "Destination is required");
+      }
       await db
         .insert(flightTable)
         .values({
@@ -637,6 +652,12 @@ const elysia = new Elysia({ prefix: "/api" })
       const flightRegex = /^\w{2}[0-9]{4}$/;
       if (!flightRegex.test(body.flight)) {
         return status(400, "Invalid flight number");
+      }
+      if (!body.firstName) {
+        return status(400, "First name is required");
+      }
+      if (!body.lastName) {
+        return status(400, "Last name is required");
       }
       await db
         .insert(passengerTable)
@@ -987,7 +1008,7 @@ const elysia = new Elysia({ prefix: "/api" })
   );
 
 const server = Bun.serve({
-  port: 3000,
+  port: 3344,
   routes: {
     "/api/*": elysia.handle,
     "/*": index,

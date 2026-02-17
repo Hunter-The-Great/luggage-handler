@@ -1,0 +1,12 @@
+services:
+  luggage:
+    networks:
+      - db
+    build:
+      context: ./
+    ports:
+      - 3344:3344
+
+networks:
+  db:
+    external: true
