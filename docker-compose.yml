@@ -6,6 +6,7 @@ services:
       context: ./
     ports:
       - 3344:3344
+    env_file: .env
 
 networks:
   db:
