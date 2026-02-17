@@ -113,7 +113,7 @@ export const GroundFlight = () => {
     );
   };
 
-  if (user.gate !== flight.flight) {
+  if (user.gate !== flight.flight && user.gate !== "") {
     return <Forbidden />;
   }
 
@@ -159,7 +159,9 @@ export const GroundFlight = () => {
                       <DropdownMenuItem
                         onClick={() => loadBag(bag.id, bag.ticket)}
                         disabled={
-                          bag.location.type !== "gate" || passenger?.remove
+                          bag.location.type !== "gate" ||
+                          passenger?.remove ||
+                          passenger?.status !== "boarded"
                         }
                         className="text-sm text-left px-2 py-1 rounded-sm text-neutral-400/80 dark:dark:hover:text-neutral-400/80 dark:hover:bg-neutral-700/60 w-full"
                       >

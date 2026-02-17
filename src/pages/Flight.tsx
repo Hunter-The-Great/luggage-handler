@@ -26,8 +26,11 @@ export const Flight = () => {
   const { bags } = useBags({ flight: id });
 
   const checkBags = (ticket: number): boolean => {
+    console.log(bags);
     const absentBags = bags.filter(
-      (bag) => bag.ticket === ticket && bag.location.type !== "gate",
+      (bag) =>
+        bag.ticket === ticket &&
+        !(bag.location.type === "gate" || bag.location.type === "loaded"),
     );
     if (absentBags.length !== 0) return false;
     return true;
@@ -124,7 +127,7 @@ export const Flight = () => {
     }
   };
 
-  if (user.gate !== flight.flight) {
+  if (user.gate !== flight.flight && user.gate !== "") {
     return <Forbidden />;
   }
 
