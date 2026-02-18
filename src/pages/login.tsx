@@ -15,6 +15,20 @@ export const LoginForm = () => {
 
   const handleSubmit = async (username: string, password: string) => {
     setLoading(" ");
+    if (username === "") {
+      toast.error("Username is required", {
+        position: "top-center",
+      });
+      setLoading(null);
+      return;
+    }
+    if (password === "") {
+      toast.error("Password is required", {
+        position: "top-center",
+      });
+      setLoading(null);
+      return;
+    }
     const res = await login(username, password);
     if (res.success) {
       setUsername("");
