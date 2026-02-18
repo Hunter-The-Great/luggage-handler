@@ -269,12 +269,14 @@ const adminRouter = new Elysia({ prefix: "/admin" })
           airline: body.airline?.toUpperCase(),
           fullAirline: body.fullAirline,
         });
+        /*
         console.log(
           chalk.green("> "),
           chalk.yellow("Email service temporarily disabled"),
         );
         console.log(chalk.green("> "), password);
         return;
+        */
         await transport.sendMail({
           from: env.CLIENT_EMAIL,
           to: body.email,
