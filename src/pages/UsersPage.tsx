@@ -194,6 +194,7 @@ const AddUserForm = () => {
             setAirline("");
             setFirstName("");
             setLastName("");
+            setFullAirline("");
             resolve();
           })
           .catch((err) => {

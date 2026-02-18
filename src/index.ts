@@ -52,8 +52,6 @@ const authRouter = new Elysia({ prefix: "/auth" })
           .where(eq(usersTable.username, username))
       )[0];
 
-      console.log(user);
-
       if (user && (await Bun.password.verify(password, user.password))) {
         const token = await jwt.sign({
           id: user.id,
