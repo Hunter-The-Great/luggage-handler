@@ -12,7 +12,7 @@ import {
   usersTable,
 } from "./db/schema";
 import type { BagLocation, Status } from "./db/schema";
-import { and, count, eq, ilike, inArray, sql } from "drizzle-orm";
+import { count, eq, ilike, inArray, sql } from "drizzle-orm";
 import { env } from "./lib/env";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { generatePassword } from "./lib/password";
@@ -207,6 +207,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
   .post(
     "/register",
     async ({ status, body }) => {
+      // TODO: make this more forgiving? this seems a bit off
       const emailRegex = /^\w{4,}@\w{3,}\.\w{2,}$/;
       const phonesRegex = /^[1-9]\d{9}$/;
       switch (body.role) {

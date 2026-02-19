@@ -179,6 +179,7 @@ const AddFlightForm = () => {
         type="text"
         className="border rounded-lg"
         value={flight}
+        placeholder="XX0000"
         onChange={(e) => setFlight(e.target.value)}
       ></Input>
       <Label>Gate</Label>
