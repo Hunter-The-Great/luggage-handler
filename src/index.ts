@@ -332,7 +332,7 @@ const adminRouter = new Elysia({ prefix: "/admin" })
 
         <div class="credentials">
           <div class="credential-row">
-            <div class="label">Email</div>
+            <div class="label">Username</div>
             <div class="value">${username}</div>
           </div>
           <div class="credential-row">
