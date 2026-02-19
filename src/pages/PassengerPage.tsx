@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import type { Status } from "@/db/schema";
 
 export const PassengerPage = () => {
@@ -159,7 +158,6 @@ export const PassengerPage = () => {
           })}
         </TableBody>
       </Table>
-      <ReactQueryDevtools initialIsOpen={false} />
     </div>
   );
 };
@@ -206,7 +204,7 @@ const AddPassengerForm = () => {
   return (
     <SheetForm
       title="Add a Passenger"
-      label="Add User"
+      label="Add Passenger"
       handleSubmit={handleSubmit}
     >
       <div className="flex gap-4">

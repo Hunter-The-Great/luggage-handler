@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 export const UsersPage = () => {
   const { users, RemoveUsers } = useUsers();
@@ -161,7 +160,6 @@ export const UsersPage = () => {
           })}
         </TableBody>
       </Table>
-      <ReactQueryDevtools initialIsOpen={false} />
     </div>
   );
 };
