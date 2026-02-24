@@ -5,7 +5,6 @@ import {
   pgEnum,
   boolean,
   jsonb,
-  foreignKey,
   bigint,
 } from "drizzle-orm/pg-core";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
@@ -41,52 +40,32 @@ export const bagTable = pgTable("bags", {
   location: jsonb().$type<BagLocation>().notNull(),
 });
 
-export const flightTable = pgTable(
-  "flights",
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    flight: varchar({ length: 6 }).notNull().unique(),
-    gate: varchar({ length: 255 }).notNull().unique(),
-    destination: varchar({ length: 255 }),
-    airline: varchar({ length: 255 }),
-    departed: boolean().notNull().default(false),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.flight],
-      foreignColumns: [table.flight],
-      name: "flight_fk",
-    }),
-  ],
-);
+export const flightTable = pgTable("flights", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  flight: varchar({ length: 6 }).notNull().unique(),
+  gate: varchar({ length: 255 }).notNull().unique(),
+  destination: varchar({ length: 255 }),
+  airline: varchar({ length: 255 }),
+  departed: boolean().notNull().default(false),
+});
 
-export const passengerTable = pgTable(
-  "passengers",
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    firstName: varchar({ length: 255 }).notNull(),
-    lastName: varchar({ length: 255 }).notNull(),
-    identification: integer().notNull(),
-    ticket: bigint({
-      mode: "number",
-    })
-      .notNull()
-      .unique(),
-    flight: varchar({ length: 6 })
-      .notNull()
-      .references(() => flightTable.flight),
-    status: statuses().notNull().default("not-checked-in"),
-    remove: boolean().notNull().default(false),
-    // TODO: Does this need a reason or no?
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.ticket],
-      foreignColumns: [table.ticket],
-      name: "ticket_fk",
-    }),
-  ],
-);
+export const passengerTable = pgTable("passengers", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  firstName: varchar({ length: 255 }).notNull(),
+  lastName: varchar({ length: 255 }).notNull(),
+  identification: integer().notNull(),
+  ticket: bigint({
+    mode: "number",
+  })
+    .notNull()
+    .unique(),
+  flight: varchar({ length: 6 })
+    .notNull()
+    .references(() => flightTable.flight),
+  status: statuses().notNull().default("not-checked-in"),
+  remove: boolean().notNull().default(false),
+  // TODO: Does this need a reason or no?
+});
 
 export const messageTable = pgTable("messages", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
