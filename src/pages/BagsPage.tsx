@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
   Table,
@@ -24,6 +25,7 @@ import { usePassengers } from "@/queries/usePassengers";
 export const BagsPage = () => {
   const { bags, updateLocation } = useBags({});
   const { passengers, updateStatus } = usePassengers(null);
+  const [search, setSearch] = useState("");
   // const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const getPassenger = (ticket: number) => {
@@ -133,8 +135,28 @@ export const BagsPage = () => {
       </div>
   */
 
+  const filteredBags = bags.filter((bag) => {
+    if (!search) return true;
+    const query = search.toLowerCase();
+    return (
+      String(bag.id).includes(query) ||
+      String(bag.ticket).includes(query) ||
+      (bag.flight ?? "").toLowerCase().includes(query)
+    );
+  });
+
   return (
-    <div className="flex flex-row w-full items-start">
+    <div className="flex flex-col w-full items-start">
+      <div className="flex flex-row w-full justify-center gap-4 p-6 pb-2">
+        <Input
+          type="text"
+          placeholder="Search by ID, ticket, or flight..."
+          className="border rounded-lg w-64"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+      <div className="flex flex-row w-full items-start">
       <div className="flex flex-col justify-center gap-4 items-center p-6 w-full">
         <div className="text-2xl font-bold">Ready to go to Security</div>
         <Table>
@@ -148,7 +170,7 @@ export const BagsPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bags
+            {filteredBags
               .filter((bag) => bag.location.type === "check-in")
               .map((bag) => {
                 const passenger = getPassenger(bag.ticket);
@@ -221,7 +243,7 @@ export const BagsPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bags
+            {filteredBags
               .filter((bag) => bag.location.type === "security")
               .map((bag) => {
                 const passenger = getPassenger(bag.ticket);
@@ -282,6 +304,7 @@ export const BagsPage = () => {
               })}
           </TableBody>
         </Table>
+      </div>
       </div>
     </div>
   );

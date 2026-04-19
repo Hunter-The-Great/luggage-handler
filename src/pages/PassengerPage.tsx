@@ -18,13 +18,24 @@ import type { Status } from "@/db/schema";
 export const PassengerPage = () => {
   const { passengers, removePassengers } = usePassengers(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [search, setSearch] = useState("");
+
+  const filteredPassengers = passengers.filter((passenger) => {
+    if (!search) return true;
+    const query = search.toLowerCase();
+    const fullName =
+      `${passenger.firstName ?? ""} ${passenger.lastName ?? ""}`.toLowerCase();
+    const ticket = String(passenger.ticket ?? "").toLowerCase();
+    return fullName.includes(query) || ticket.includes(query);
+  });
 
   const selectAll =
-    selected.size === passengers.length && passengers.length !== 0;
+    selected.size === filteredPassengers.length &&
+    filteredPassengers.length !== 0;
 
   const HandleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(new Set(passengers.map((passenger) => passenger.id)));
+      setSelected(new Set(filteredPassengers.map((passenger) => passenger.id)));
     } else {
       setSelected(new Set());
     }
@@ -94,13 +105,22 @@ export const PassengerPage = () => {
   return (
     <div className="flex flex-col justify-center items-center p-6">
       <div className="flex flex-row w-full justify-between gap-4 pb-4">
-        <Button
+        <div className="flex gap-2 items-center">
+          <Button
           variant={"destructive"}
           disabled={selected.size === 0}
           onClick={HandleDelete}
         >
           Delete
         </Button>
+          <Input
+            type="text"
+            placeholder="Search by name or ticket..."
+            className="border rounded-lg w-64"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <AddPassengerForm />
       </div>
       <Table>
@@ -121,7 +141,7 @@ export const PassengerPage = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {passengers.map((passenger) => {
+          {filteredPassengers.map((passenger) => {
             return (
               <TableRow
                 className={

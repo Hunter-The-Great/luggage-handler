@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useFlights } from "@/queries/useFlights";
 import { useParams } from "react-router";
 import { NotFound } from "./404";
 import { usePassengers } from "@/queries/usePassengers";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -24,6 +26,17 @@ export const Flight = () => {
   const { flights, departFlight } = useFlights();
   const { passengers, updateStatus } = usePassengers(id!);
   const { bags } = useBags({ flight: id });
+  const [search, setSearch] = useState("");
+
+  const filteredPassengers = passengers.filter((passenger) => {
+    if (!search) return true;
+    const query = search.toLowerCase();
+    const fullName =
+      `${passenger.firstName ?? ""} ${passenger.lastName ?? ""}`.toLowerCase();
+    const ticket = String(passenger.ticket ?? "");
+    const identification = String(passenger.identification ?? "").toLowerCase();
+    return fullName.includes(query) || ticket.includes(query) || identification.includes(query);
+  });
 
   const checkBags = (ticket: number): boolean => {
     console.log(bags);
@@ -148,6 +161,13 @@ export const Flight = () => {
         <DepartButton />
         <div className="flex flex-1" />
       </div>
+      <Input
+        type="text"
+        placeholder="Search passengers..."
+        className="border rounded-lg w-64"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
       <Table>
         <TableHeader>
           <TableRow>
@@ -161,7 +181,7 @@ export const Flight = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {passengers.map((passenger) => {
+          {filteredPassengers.map((passenger) => {
             const bags = checkBags(passenger.ticket);
             return (
               <TableRow

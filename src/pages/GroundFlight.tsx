@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useParams } from "react-router";
+import { Input } from "@/components/ui/input";
 import { usePassengers } from "@/queries/usePassengers";
 import {
   Table,
@@ -32,6 +34,7 @@ export const GroundFlight = () => {
   const { flights } = useFlights();
   const { passengers, updateStatus } = usePassengers(id!);
   const { bags, updateLocation } = useBags({ flight: id });
+  const [search, setSearch] = useState("");
 
   const checkPassenger = (passenger: any) => {
     if (!passenger || !passenger.status) return;
@@ -117,8 +120,25 @@ export const GroundFlight = () => {
     return <Forbidden />;
   }
 
+  const filteredBags = bags.filter((bag) => {
+    if (!search) return true;
+    const query = search.toLowerCase();
+    return (
+      String(bag.id).includes(query) ||
+      String(bag.ticket).includes(query) ||
+      (bag.flight ?? "").toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div className="flex flex-col justify-center gap-4 items-center p-6">
+      <Input
+        type="text"
+        placeholder="Search by ID, ticket, or flight..."
+        className="border rounded-lg w-64"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
       <Table>
         <TableHeader>
           <TableRow>
@@ -131,7 +151,7 @@ export const GroundFlight = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {bags.map((bag) => {
+          {filteredBags.map((bag) => {
             const passenger = getPassenger(bag.ticket);
             return (
               <TableRow

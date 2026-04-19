@@ -17,12 +17,24 @@ import { Button } from "@/components/ui/button";
 export const FlightPage = () => {
   const { flights, removeFlights } = useFlights();
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [search, setSearch] = useState("");
 
-  const selectAll = selected.size === flights.length && flights.length !== 0;
+  const filteredFlights = flights.filter((flight) => {
+    if (!search) return true;
+    const query = search.toLowerCase();
+    return (
+      (flight.flight ?? "").toLowerCase().includes(query) ||
+      (flight.airline ?? "").toLowerCase().includes(query) ||
+      (flight.destination ?? "").toLowerCase().includes(query) ||
+      (flight.gate ?? "").toLowerCase().includes(query)
+    );
+  });
+
+  const selectAll = selected.size === filteredFlights.length && filteredFlights.length !== 0;
 
   const HandleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(new Set(flights.map((flight) => flight.id)));
+      setSelected(new Set(filteredFlights.map((flight) => flight.id)));
     } else {
       setSelected(new Set());
     }
@@ -74,13 +86,22 @@ export const FlightPage = () => {
   return (
     <div className="flex flex-col justify-center items-center p-6">
       <div className="flex flex-row w-full justify-between gap-4 pb-4">
-        <Button
-          variant={"destructive"}
-          disabled={selected.size === 0}
-          onClick={HandleDelete}
-        >
-          Delete
-        </Button>
+        <div className="flex gap-2 items-center">
+          <Button
+            variant={"destructive"}
+            disabled={selected.size === 0}
+            onClick={HandleDelete}
+          >
+            Delete
+          </Button>
+          <Input
+            type="text"
+            placeholder="Search flights..."
+            className="border rounded-lg w-64"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <AddFlightForm />
       </div>
       <Table>
@@ -101,7 +122,7 @@ export const FlightPage = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {flights.map((flight) => {
+          {filteredFlights.map((flight) => {
             return (
               <TableRow id={flight.id.toString()}>
                 <TableCell>
