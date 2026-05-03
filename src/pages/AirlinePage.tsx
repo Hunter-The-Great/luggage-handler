@@ -24,6 +24,14 @@ import { SheetForm } from "@/components/sheetForm";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
@@ -48,6 +56,9 @@ export const AirlinePage = () => {
   const { user } = useAuth();
   const { addMessage } = useMessages();
   const [searchTicket, setSearchTicket] = useState("");
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [flagReason, setFlagReason] = useState("");
+  const [flagPassengerId, setFlagPassengerId] = useState<number | null>(null);
 
   if (!user.airline) return <div>Invalid airline</div>;
   const { passengers, updateStatus } = usePassengers(null);
@@ -71,17 +82,29 @@ export const AirlinePage = () => {
     );
   };
 
-  const flag = async (id: number) => {
+  const openFlagDialog = (passengerId: number) => {
+    setFlagPassengerId(passengerId);
+    setFlagReason("");
+    setFlagDialogOpen(true);
+  };
+
+  const flag = async () => {
+    if (flagPassengerId === null) return;
+    const id = flagPassengerId;
+    setFlagDialogOpen(false);
     toast.promise(
       new Promise<void>((resolve, reject) => {
         updateStatus.mutateAsync({ id, flag: true }).catch((err) => {
           reject(err);
         });
+        const reasonText = flagReason.trim()
+          ? ` Reason: ${flagReason.trim()}`
+          : "";
         addMessage
           .mutateAsync({
             airline: user.airline,
             to: "admin",
-            body: `Passenger with ticket ${passengers.find((p) => p.id === id)?.ticket} flagged for removal`,
+            body: `Passenger with ticket ${passengers.find((p) => p.id === id)?.ticket} flagged for removal.${reasonText}`,
           })
           .catch((err) => {
             reject(err);
@@ -95,6 +118,8 @@ export const AirlinePage = () => {
         error: "Failed to flag passenger",
       },
     );
+    setFlagReason("");
+    setFlagPassengerId(null);
   };
 
   const handleRemoveBags = async (ticket: number) => {
@@ -227,7 +252,7 @@ export const AirlinePage = () => {
                         Remove all Bags
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => flag(passenger.id)}
+                        onClick={() => openFlagDialog(passenger.id)}
                         variant="destructive"
                       >
                         Flag for Removal
@@ -240,6 +265,33 @@ export const AirlinePage = () => {
           })}
         </TableBody>
       </Table>
+      <Dialog open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Flag for Removal</DialogTitle>
+            <DialogDescription>
+              Provide a reason for flagging this passenger for removal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="flag-reason">Reason</Label>
+            <Input
+              id="flag-reason"
+              placeholder="Enter reason for removal..."
+              value={flagReason}
+              onChange={(e) => setFlagReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFlagDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={flag}>
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

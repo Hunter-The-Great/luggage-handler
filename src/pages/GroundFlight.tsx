@@ -16,6 +16,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import type { BagLocation } from "@/db/schema";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -35,6 +44,9 @@ export const GroundFlight = () => {
   const { passengers, updateStatus } = usePassengers(id!);
   const { bags, updateLocation } = useBags({ flight: id });
   const [search, setSearch] = useState("");
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [flagReason, setFlagReason] = useState("");
+  const [flagPassengerId, setFlagPassengerId] = useState<number | null>(null);
 
   const checkPassenger = (passenger: any) => {
     if (!passenger || !passenger.status) return;
@@ -89,18 +101,30 @@ export const GroundFlight = () => {
     );
   };
 
-  const flag = async (id: number) => {
+  const openFlagDialog = (passengerId: number) => {
+    setFlagPassengerId(passengerId);
+    setFlagReason("");
+    setFlagDialogOpen(true);
+  };
+
+  const flag = async () => {
+    if (flagPassengerId === null) return;
+    const id = flagPassengerId;
+    setFlagDialogOpen(false);
     toast.promise(
       new Promise<void>((resolve, reject) => {
         updateStatus.mutateAsync({ id, flag: true }).catch((err) => {
           reject(err);
         });
         const passenger = passengers.find((p) => p.id === id);
+        const reasonText = flagReason.trim()
+          ? ` Reason: ${flagReason.trim()}`
+          : "";
         addMessage
           .mutateAsync({
             airline: passenger!.flight.substring(0, 2),
             to: "airline",
-            body: `Security violation on bag belonging to passenger with ticket number ${passenger?.ticket}`,
+            body: `Security violation on bag belonging to passenger with ticket number ${passenger?.ticket}.${reasonText}`,
           })
           .catch((err) => {
             reject(err);
@@ -114,6 +138,8 @@ export const GroundFlight = () => {
         error: "Failed to flag passenger",
       },
     );
+    setFlagReason("");
+    setFlagPassengerId(null);
   };
 
   if (user.gate !== flight.flight && user.gate !== "") {
@@ -190,7 +216,7 @@ export const GroundFlight = () => {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => {
-                          if (passenger) flag(passenger.id);
+                          if (passenger) openFlagDialog(passenger.id);
                           else toast.warning("Error fetching passenger");
                         }}
                         variant="destructive"
@@ -206,6 +232,33 @@ export const GroundFlight = () => {
           })}
         </TableBody>
       </Table>
+      <Dialog open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Flag for Removal</DialogTitle>
+            <DialogDescription>
+              Provide a reason for flagging this passenger for removal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="flag-reason">Reason</Label>
+            <Input
+              id="flag-reason"
+              placeholder="Enter reason for removal..."
+              value={flagReason}
+              onChange={(e) => setFlagReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFlagDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={flag}>
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
