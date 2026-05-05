@@ -99,7 +99,8 @@ export const TopBar = () => {
           {user?.fullAirline ? user.fullAirline : ""}
         </h1>
       </div>
-      <div className="flex-1 flex justify-end">
+      <div className="flex-1 flex justify-end items-center gap-2">
+        {user && <span className="text-sm text-neutral-400">{user.username}</span>}
         <ProfileButtons />
       </div>
     </nav>
